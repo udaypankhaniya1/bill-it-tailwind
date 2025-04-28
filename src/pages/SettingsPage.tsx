@@ -11,6 +11,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { addTemplate, updateTemplate, Template } from '@/redux/slices/templateSlice';
 import { v4 as uuidv4 } from 'uuid';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import TemplatePreview from '@/components/TemplatePreview';
 
 const SettingsPage = () => {
   const { toast } = useToast();
@@ -28,9 +30,24 @@ const SettingsPage = () => {
   const [templateName, setTemplateName] = useState('');
   const [primaryColor, setPrimaryColor] = useState('blue');
   const [secondaryColor, setSecondaryColor] = useState('gray');
+  const [tableColor, setTableColor] = useState('#f8f9fa');
+  const [headerPosition, setHeaderPosition] = useState<'left' | 'center' | 'right'>('center');
+  const [footerDesign, setFooterDesign] = useState<'simple' | 'detailed' | 'minimal'>('simple');
   const [showGst, setShowGst] = useState(true);
   const [showContact, setShowContact] = useState(true);
   const [showLogo, setShowLogo] = useState(true);
+  
+  // Preview data for template
+  const previewInvoice = {
+    invoiceNumber: 'INV-12345',
+    partyName: 'Demo Client',
+    date: '2025-04-28',
+    total: 12500,
+    items: [
+      { id: '1', description: 'Sample Item 1', quantity: 2, rate: 5000, total: 10000 },
+      { id: '2', description: 'Sample Item 2', quantity: 1, rate: 2500, total: 2500 }
+    ]
+  };
   
   const handleSaveBusinessInfo = () => {
     toast({
@@ -51,6 +68,9 @@ const SettingsPage = () => {
     setTemplateName(template.name);
     setPrimaryColor(template.primaryColor);
     setSecondaryColor(template.secondaryColor);
+    setTableColor(template.tableColor || '#f8f9fa');
+    setHeaderPosition(template.headerPosition || 'center');
+    setFooterDesign(template.footerDesign || 'simple');
     setShowGst(template.showGst);
     setShowContact(template.showContact);
     setShowLogo(template.showLogo);
@@ -61,6 +81,9 @@ const SettingsPage = () => {
     setTemplateName('New Template');
     setPrimaryColor('blue');
     setSecondaryColor('gray');
+    setTableColor('#f8f9fa');
+    setHeaderPosition('center');
+    setFooterDesign('simple');
     setShowGst(true);
     setShowContact(true);
     setShowLogo(true);
@@ -72,6 +95,9 @@ const SettingsPage = () => {
       name: templateName,
       primaryColor,
       secondaryColor,
+      tableColor,
+      headerPosition,
+      footerDesign,
       fontSize: {
         header: 'text-3xl',
         body: 'text-base',
@@ -229,105 +255,192 @@ const SettingsPage = () => {
                 </div>
                 
                 {(editingTemplate || templateName) && (
-                  <Card className="mt-6">
-                    <CardHeader>
-                      <CardTitle>
-                        {editingTemplate ? `Edit Template: ${editingTemplate.name}` : 'Create New Template'}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div>
-                          <Label htmlFor="templateName">Template Name</Label>
-                          <Input
-                            id="templateName"
-                            value={templateName}
-                            onChange={(e) => setTemplateName(e.target.value)}
-                            className="mt-1"
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>
+                          {editingTemplate ? `Edit Template: ${editingTemplate.name}` : 'Create New Template'}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div>
+                            <Label htmlFor="templateName">Template Name</Label>
+                            <Input
+                              id="templateName"
+                              value={templateName}
+                              onChange={(e) => setTemplateName(e.target.value)}
+                              className="mt-1"
+                            />
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="primaryColor">Primary Color</Label>
+                              <div className="flex mt-1 space-x-2">
+                                <Input
+                                  id="primaryColor"
+                                  type="color"
+                                  value={primaryColor}
+                                  onChange={(e) => setPrimaryColor(e.target.value)}
+                                  className="w-12 h-10 p-1"
+                                />
+                                <Input
+                                  value={primaryColor}
+                                  onChange={(e) => setPrimaryColor(e.target.value)}
+                                />
+                              </div>
+                            </div>
+                            <div>
+                              <Label htmlFor="secondaryColor">Secondary Color</Label>
+                              <div className="flex mt-1 space-x-2">
+                                <Input
+                                  id="secondaryColor"
+                                  type="color"
+                                  value={secondaryColor}
+                                  onChange={(e) => setSecondaryColor(e.target.value)}
+                                  className="w-12 h-10 p-1"
+                                />
+                                <Input
+                                  value={secondaryColor}
+                                  onChange={(e) => setSecondaryColor(e.target.value)}
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="tableColor">Table Background Color</Label>
+                            <div className="flex mt-1 space-x-2">
+                              <Input
+                                id="tableColor"
+                                type="color"
+                                value={tableColor}
+                                onChange={(e) => setTableColor(e.target.value)}
+                                className="w-12 h-10 p-1"
+                              />
+                              <Input
+                                value={tableColor}
+                                onChange={(e) => setTableColor(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <Label>Header Position</Label>
+                            <RadioGroup 
+                              value={headerPosition} 
+                              onValueChange={(value) => setHeaderPosition(value as 'left' | 'center' | 'right')}
+                              className="flex gap-4 mt-1"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="left" id="left" />
+                                <Label htmlFor="left">Left</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="center" id="center" />
+                                <Label htmlFor="center">Center</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="right" id="right" />
+                                <Label htmlFor="right">Right</Label>
+                              </div>
+                            </RadioGroup>
+                          </div>
+                          
+                          <div>
+                            <Label>Footer Design</Label>
+                            <RadioGroup 
+                              value={footerDesign} 
+                              onValueChange={(value) => setFooterDesign(value as 'simple' | 'detailed' | 'minimal')}
+                              className="flex flex-col gap-2 mt-1"
+                            >
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="simple" id="simple" />
+                                <Label htmlFor="simple">Simple</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="detailed" id="detailed" />
+                                <Label htmlFor="detailed">Detailed</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="minimal" id="minimal" />
+                                <Label htmlFor="minimal">Minimal</Label>
+                              </div>
+                            </RadioGroup>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <Switch
+                                id="showGst"
+                                checked={showGst}
+                                onCheckedChange={setShowGst}
+                              />
+                              <Label htmlFor="showGst">Show GST by default</Label>
+                            </div>
+                            
+                            <div className="flex items-center space-x-2">
+                              <Switch
+                                id="showContact"
+                                checked={showContact}
+                                onCheckedChange={setShowContact}
+                              />
+                              <Label htmlFor="showContact">Show contact information</Label>
+                            </div>
+                            
+                            <div className="flex items-center space-x-2">
+                              <Switch
+                                id="showLogo"
+                                checked={showLogo}
+                                onCheckedChange={setShowLogo}
+                              />
+                              <Label htmlFor="showLogo">Show logo</Label>
+                            </div>
+                          </div>
+                          
+                          <div className="flex justify-end space-x-2">
+                            <Button 
+                              variant="outline" 
+                              onClick={() => {
+                                setEditingTemplate(null);
+                                setTemplateName('');
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                            <Button onClick={handleSaveTemplate}>
+                              {editingTemplate ? 'Update Template' : 'Create Template'}
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Template Preview</CardTitle>
+                        <CardDescription>See how your invoice will look with these settings</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="border rounded-lg overflow-hidden">
+                          <TemplatePreview 
+                            invoice={previewInvoice}
+                            template={{
+                              primaryColor,
+                              secondaryColor,
+                              tableColor,
+                              headerPosition,
+                              footerDesign,
+                              showGst,
+                              showContact,
+                              showLogo
+                            }}
                           />
                         </div>
-                        
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <Label htmlFor="primaryColor">Primary Color</Label>
-                            <div className="flex mt-1 space-x-2">
-                              <Input
-                                id="primaryColor"
-                                type="color"
-                                value={primaryColor}
-                                onChange={(e) => setPrimaryColor(e.target.value)}
-                                className="w-12 h-10 p-1"
-                              />
-                              <Input
-                                value={primaryColor}
-                                onChange={(e) => setPrimaryColor(e.target.value)}
-                              />
-                            </div>
-                          </div>
-                          <div>
-                            <Label htmlFor="secondaryColor">Secondary Color</Label>
-                            <div className="flex mt-1 space-x-2">
-                              <Input
-                                id="secondaryColor"
-                                type="color"
-                                value={secondaryColor}
-                                onChange={(e) => setSecondaryColor(e.target.value)}
-                                className="w-12 h-10 p-1"
-                              />
-                              <Input
-                                value={secondaryColor}
-                                onChange={(e) => setSecondaryColor(e.target.value)}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <div className="flex items-center space-x-2">
-                            <Switch
-                              id="showGst"
-                              checked={showGst}
-                              onCheckedChange={setShowGst}
-                            />
-                            <Label htmlFor="showGst">Show GST by default</Label>
-                          </div>
-                          
-                          <div className="flex items-center space-x-2">
-                            <Switch
-                              id="showContact"
-                              checked={showContact}
-                              onCheckedChange={setShowContact}
-                            />
-                            <Label htmlFor="showContact">Show contact information</Label>
-                          </div>
-                          
-                          <div className="flex items-center space-x-2">
-                            <Switch
-                              id="showLogo"
-                              checked={showLogo}
-                              onCheckedChange={setShowLogo}
-                            />
-                            <Label htmlFor="showLogo">Show logo</Label>
-                          </div>
-                        </div>
-                        
-                        <div className="flex justify-end space-x-2">
-                          <Button 
-                            variant="outline" 
-                            onClick={() => {
-                              setEditingTemplate(null);
-                              setTemplateName('');
-                            }}
-                          >
-                            Cancel
-                          </Button>
-                          <Button onClick={handleSaveTemplate}>
-                            {editingTemplate ? 'Update Template' : 'Create Template'}
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </div>
                 )}
               </CardContent>
             </Card>

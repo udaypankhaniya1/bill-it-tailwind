@@ -14,6 +14,9 @@ export interface Template {
   showGst: boolean;
   showContact: boolean;
   showLogo: boolean;
+  headerPosition: 'left' | 'center' | 'right';
+  tableColor: string;
+  footerDesign: 'simple' | 'detailed' | 'minimal';
   createdAt: string;
   updatedAt: string;
 }
@@ -38,6 +41,9 @@ const defaultTemplate: Template = {
   showGst: true,
   showContact: true,
   showLogo: true,
+  headerPosition: 'center',
+  tableColor: '#f8f9fa',
+  footerDesign: 'simple',
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 };

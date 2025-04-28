@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { FileText, Share } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+import { formatNumber } from '@/utils/formatNumber';
 
 const InvoiceViewPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -25,7 +25,6 @@ const InvoiceViewPage = () => {
         setIsLoading(true);
         const data = await fetchInvoice(id);
 
-        // Transform the data structure to match what InvoicePreview expects
         const transformedInvoice = {
           ...data,
           invoiceNumber: data.invoice_number,
@@ -102,7 +101,6 @@ const InvoiceViewPage = () => {
     const invoiceElement = document.getElementById('invoice-preview');
     if (!invoiceElement) return;
 
-    // Create a blob with HTML content
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -138,9 +136,11 @@ const InvoiceViewPage = () => {
   const shareToWhatsApp = () => {
     if (!invoice) return;
     
-    const text = `Invoice #${invoice.invoice_number} for ${invoice.party_name}. Total Amount: ₹${invoice.total}`;
-    const url = encodeURIComponent(window.location.href);
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text + '\n\n' + url)}`;
+    const formattedAmount = formatNumber(invoice.total);
+    
+    const text = `📋 *Invoice #${invoice.invoice_number}*\n\n🏢 *Client:* ${invoice.party_name}\n💰 *Total Amount:* ₹${formattedAmount}\n\nPlease check the invoice details below:`;
+    
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
     
     window.open(whatsappUrl, '_blank');
   };
@@ -181,7 +181,7 @@ const InvoiceViewPage = () => {
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold">Invoice #{invoice.invoice_number}</h2>
+        <h2 className="text-3xl font-bold">Invoice #{invoice?.invoice_number}</h2>
         <div className="flex gap-2">
           <Button onClick={() => navigate('/invoices')} variant="outline">Back</Button>
           <Button onClick={exportAsDoc} variant="outline">

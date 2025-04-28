@@ -14,6 +14,9 @@ export interface Template {
   show_gst: boolean;
   show_contact: boolean;
   show_logo: boolean;
+  header_position?: 'left' | 'center' | 'right';
+  table_color?: string;
+  footer_design?: 'simple' | 'detailed' | 'minimal';
   user_id?: string;
   created_at?: string;
   updated_at?: string;
@@ -56,7 +59,10 @@ export const createTemplate = async (template: Omit<Template, 'id' | 'user_id'>)
     .from('templates')
     .insert({
       id: newTemplateId,
-      user_id: userId, // Add user_id which is required by the database
+      user_id: userId, 
+      header_position: template.header_position || 'center',
+      table_color: template.table_color || '#f8f9fa',
+      footer_design: template.footer_design || 'simple',
       ...template
     });
 
@@ -81,6 +87,9 @@ export const updateTemplate = async (template: Template) => {
       show_gst: template.show_gst,
       show_contact: template.show_contact,
       show_logo: template.show_logo,
+      header_position: template.header_position || 'center',
+      table_color: template.table_color || '#f8f9fa',
+      footer_design: template.footer_design || 'simple',
       updated_at: new Date().toISOString(),
     })
     .eq('id', template.id);
