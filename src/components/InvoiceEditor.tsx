@@ -13,6 +13,21 @@ import {
   TableBody, 
   TableCell 
 } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Plus, Trash } from "lucide-react";
+import { v4 as uuidv4 } from "uuid";
+import { useToast } from "@/hooks/use-toast";
+import { useDispatch } from "react-redux";
+import { addInvoice } from "@/redux/slices/invoiceSlice";
+
+interface InvoiceItem {
+  id: string;
+  description: string;
+  quantity: number;
+  rate: number;
+  total: number;
+}
 
 interface InvoiceEditorProps {
   onSave?: (markdown: string) => void;
@@ -20,42 +35,225 @@ interface InvoiceEditorProps {
 }
 
 const InvoiceEditor = ({ onSave, initialContent }: InvoiceEditorProps) => {
+  const { toast } = useToast();
+  const dispatch = useDispatch();
+
+  // State for all invoice fields
   const [showGst, setShowGst] = useState(true);
-  const [invoiceData, setInvoiceData] = useState({
-    subtotal: 403000,
-    gst: 72540,
-    total: 475540
-  });
+  const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [partyName, setPartyName] = useState("Gulab Oil");
+  const [invoiceDate, setInvoiceDate] = useState("2025-04-23");
+  
+  // Invoice items state
+  const [items, setItems] = useState<InvoiceItem[]>([
+    {
+      id: uuidv4(),
+      description: "મેન ગેટ",
+      quantity: 2,
+      rate: 7000,
+      total: 14000
+    },
+    {
+      id: uuidv4(),
+      description: "Dom (sft)",
+      quantity: 4950,
+      rate: 33.33,
+      total: 165000
+    },
+    {
+      id: uuidv4(),
+      description: "પ્રિન્ટ કાર્પેટ (55X120)",
+      quantity: 5,
+      rate: 6600,
+      total: 33000
+    },
+    {
+      id: uuidv4(),
+      description: "સ્ટેજ (40X20X2.5)",
+      quantity: 40,
+      rate: 800,
+      total: 32000
+    },
+    {
+      id: uuidv4(),
+      description: "સ્ટેજ બેગ્રાઉન્ડ (40X11)",
+      quantity: 25,
+      rate: 440,
+      total: 11000
+    },
+    {
+      id: uuidv4(),
+      description: "સોફા",
+      quantity: 16,
+      rate: 1200,
+      total: 19200
+    },
+    {
+      id: uuidv4(),
+      description: "ખુશી કવર+રીબીન",
+      quantity: 500,
+      rate: 30,
+      total: 15000
+    },
+    {
+      id: uuidv4(),
+      description: "ગાદલા",
+      quantity: 20,
+      rate: 30,
+      total: 600
+    },
+    {
+      id: uuidv4(),
+      description: "ટેબલ",
+      quantity: 150,
+      rate: 175,
+      total: 26250
+    },
+    {
+      id: uuidv4(),
+      description: "કમાન (ગેટ)",
+      quantity: 2,
+      rate: 700,
+      total: 1400
+    },
+    {
+      id: uuidv4(),
+      description: "નવ ફ્લોરિંગ (ડબલ) (sft)",
+      quantity: 15000,
+      rate: 3,
+      total: 45000
+    },
+    {
+      id: uuidv4(),
+      description: "સાઈડ જમણવાર માટે (sft)",
+      quantity: 2500,
+      rate: 10,
+      total: 25000
+    },
+    {
+      id: uuidv4(),
+      description: "રસોડા માટે મંડપ",
+      quantity: 8,
+      rate: 400,
+      total: 3200
+    },
+    {
+      id: uuidv4(),
+      description: "રાઉન્ડ ટેબલ",
+      quantity: 25,
+      rate: 300,
+      total: 7500
+    },
+    {
+      id: uuidv4(),
+      description: "જમણવાર માટે ખુરશી કવરવાળી",
+      quantity: 250,
+      rate: 20,
+      total: 5000
+    }
+  ]);
 
-  // Create a simple editor with default configuration
-  const editor = useBlockNote({});
-
-  // Update the GST calculation based on the toggle
-  const updateGstCalculation = () => {
-    const subtotal = invoiceData.subtotal;
+  // Function to calculate totals
+  const calculateTotals = () => {
+    const subtotal = items.reduce((sum, item) => sum + item.total, 0);
     const gst = showGst ? subtotal * 0.18 : 0;
     const total = subtotal + gst;
     
-    setInvoiceData({
+    return {
       subtotal,
       gst,
       total
+    };
+  };
+
+  // Update item details
+  const handleItemChange = (index: number, field: keyof InvoiceItem, value: string | number) => {
+    const updatedItems = [...items];
+    
+    if (field === 'quantity' || field === 'rate') {
+      const newValue = typeof value === 'string' ? parseFloat(value) : value;
+      updatedItems[index][field] = newValue as number;
+      
+      // Recalculate total
+      updatedItems[index].total = updatedItems[index].quantity * updatedItems[index].rate;
+    } else {
+      updatedItems[index][field] = value as never;
+    }
+    
+    setItems(updatedItems);
+  };
+
+  // Add new item
+  const addNewItem = () => {
+    setItems([
+      ...items,
+      {
+        id: uuidv4(),
+        description: '',
+        quantity: 1,
+        rate: 0,
+        total: 0
+      }
+    ]);
+  };
+
+  // Remove item
+  const removeItem = (index: number) => {
+    const updatedItems = [...items];
+    updatedItems.splice(index, 1);
+    setItems(updatedItems);
+  };
+
+  // Format number to Indian currency format
+  const formatNumber = (value: number): string => {
+    const formatter = new Intl.NumberFormat('en-IN');
+    return formatter.format(value);
+  };
+
+  // Save invoice
+  const saveInvoice = () => {
+    const { subtotal, gst, total } = calculateTotals();
+    
+    const invoice = {
+      id: uuidv4(),
+      invoiceNumber: invoiceNumber || `INV-${Date.now().toString().slice(-6)}`,
+      partyName,
+      date: invoiceDate,
+      items,
+      subtotal,
+      gst,
+      total,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    dispatch(addInvoice(invoice));
+
+    toast({
+      title: "Invoice saved",
+      description: "Your invoice has been saved successfully",
     });
   };
 
-  useEffect(() => {
-    updateGstCalculation();
-  }, [showGst]);
+  // Create editor instance
+  const editor = useBlockNote({});
+
+  // Get calculated totals
+  const { subtotal, gst, total } = calculateTotals();
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="gst-switch"
-          checked={showGst}
-          onCheckedChange={setShowGst}
-        />
-        <Label htmlFor="gst-switch">Apply GST (18%)</Label>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="gst-switch"
+            checked={showGst}
+            onCheckedChange={setShowGst}
+          />
+          <Label htmlFor="gst-switch">Apply GST (18%)</Label>
+        </div>
+        
+        <Button onClick={saveInvoice}>Save Invoice</Button>
       </div>
       
       <div className="bg-white p-6 rounded-lg border shadow-sm">
@@ -70,13 +268,48 @@ const InvoiceEditor = ({ onSave, initialContent }: InvoiceEditorProps) => {
         <hr className="my-4" />
         
         <h2 className="text-xl font-semibold mb-2">Invoice Details</h2>
-        <p className="mb-1"><span className="font-medium">Invoice No:</span> [To be filled]</p>
-        <p className="mb-1"><span className="font-medium">Party Name:</span> Gulab Oil</p>
-        <p className="mb-4"><span className="font-medium">Date:</span> 23-04-2025</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <Label htmlFor="invoice-number" className="block mb-1">Invoice No:</Label>
+            <Input 
+              id="invoice-number"
+              value={invoiceNumber} 
+              onChange={(e) => setInvoiceNumber(e.target.value)}
+              placeholder="Enter invoice number"
+              className="max-w-xs"
+            />
+          </div>
+          <div>
+            <Label htmlFor="party-name" className="block mb-1">Party Name:</Label>
+            <Input 
+              id="party-name"
+              value={partyName} 
+              onChange={(e) => setPartyName(e.target.value)}
+              className="max-w-xs"
+            />
+          </div>
+          <div>
+            <Label htmlFor="invoice-date" className="block mb-1">Date:</Label>
+            <Input 
+              id="invoice-date"
+              type="date"
+              value={invoiceDate} 
+              onChange={(e) => setInvoiceDate(e.target.value)}
+              className="max-w-xs"
+            />
+          </div>
+        </div>
         
         <hr className="my-4" />
         
-        <h2 className="text-xl font-semibold mb-4">Billing Details</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold">Billing Details</h2>
+          <Button variant="outline" size="sm" onClick={addNewItem}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Item
+          </Button>
+        </div>
         
         <div className="overflow-x-auto">
           <Table>
@@ -87,114 +320,49 @@ const InvoiceEditor = ({ onSave, initialContent }: InvoiceEditorProps) => {
                 <TableHead>Quantity (જથ્થો)</TableHead>
                 <TableHead>Rate (₹)</TableHead>
                 <TableHead>Total (₹)</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow>
-                <TableCell>1</TableCell>
-                <TableCell>મેન ગેટ</TableCell>
-                <TableCell>2</TableCell>
-                <TableCell>7,000</TableCell>
-                <TableCell>14,000</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>2</TableCell>
-                <TableCell>Dom (sft)</TableCell>
-                <TableCell>4,950</TableCell>
-                <TableCell>33.33</TableCell>
-                <TableCell>1,65,000</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>3</TableCell>
-                <TableCell>પ્રિન્ટ કાર્પેટ (55X120)</TableCell>
-                <TableCell>5</TableCell>
-                <TableCell>6,600</TableCell>
-                <TableCell>33,000</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>4</TableCell>
-                <TableCell>સ્ટેજ (40X20X2.5)</TableCell>
-                <TableCell>40</TableCell>
-                <TableCell>800</TableCell>
-                <TableCell>32,000</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>5</TableCell>
-                <TableCell>સ્ટેજ બેગ્રાઉન્ડ (40X11)</TableCell>
-                <TableCell>25</TableCell>
-                <TableCell>440</TableCell>
-                <TableCell>11,000</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>6</TableCell>
-                <TableCell>સોફા</TableCell>
-                <TableCell>16</TableCell>
-                <TableCell>1,200</TableCell>
-                <TableCell>19,200</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>7</TableCell>
-                <TableCell>ખુશી કવર+રીબીન</TableCell>
-                <TableCell>500</TableCell>
-                <TableCell>30</TableCell>
-                <TableCell>15,000</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>8</TableCell>
-                <TableCell>ગાદલા</TableCell>
-                <TableCell>20</TableCell>
-                <TableCell>30</TableCell>
-                <TableCell>600</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>9</TableCell>
-                <TableCell>ટેબલ</TableCell>
-                <TableCell>150</TableCell>
-                <TableCell>175</TableCell>
-                <TableCell>26,250</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>10</TableCell>
-                <TableCell>કમાન (ગેટ)</TableCell>
-                <TableCell>2</TableCell>
-                <TableCell>700</TableCell>
-                <TableCell>1,400</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>11</TableCell>
-                <TableCell>નવ ફ્લોરિંગ (ડબલ) (sft)</TableCell>
-                <TableCell>15,000</TableCell>
-                <TableCell>3</TableCell>
-                <TableCell>45,000</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>12</TableCell>
-                <TableCell>સાઈડ જમણવાર માટે (sft)</TableCell>
-                <TableCell>2,500</TableCell>
-                <TableCell>10</TableCell>
-                <TableCell>25,000</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>13</TableCell>
-                <TableCell>રસોડા માટે મંડપ</TableCell>
-                <TableCell>8</TableCell>
-                <TableCell>400</TableCell>
-                <TableCell>3,200</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>14</TableCell>
-                <TableCell>રાઉન્ડ ટેબલ</TableCell>
-                <TableCell>25</TableCell>
-                <TableCell>300</TableCell>
-                <TableCell>7,500</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>15</TableCell>
-                <TableCell>જમણવાર માટે ખુરશી કવરવાળી</TableCell>
-                <TableCell>250</TableCell>
-                <TableCell>20</TableCell>
-                <TableCell>5,000</TableCell>
-              </TableRow>
+              {items.map((item, index) => (
+                <TableRow key={item.id}>
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>
+                    <Input
+                      value={item.description}
+                      onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+                      className="w-full"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      value={item.quantity}
+                      onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                      className="w-full"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      value={item.rate}
+                      onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
+                      className="w-full"
+                    />
+                  </TableCell>
+                  <TableCell>{formatNumber(item.total)}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeItem(index)}
+                      disabled={items.length <= 1}
+                    >
+                      <Trash className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </div>
@@ -213,17 +381,17 @@ const InvoiceEditor = ({ onSave, initialContent }: InvoiceEditorProps) => {
             <TableBody>
               <TableRow>
                 <TableCell>Total without GST</TableCell>
-                <TableCell>{invoiceData.subtotal.toLocaleString('en-IN')}</TableCell>
+                <TableCell>{formatNumber(subtotal)}</TableCell>
               </TableRow>
               {showGst && (
                 <TableRow>
                   <TableCell>GST (18%)</TableCell>
-                  <TableCell>{invoiceData.gst.toLocaleString('en-IN')}</TableCell>
+                  <TableCell>{formatNumber(gst)}</TableCell>
                 </TableRow>
               )}
               <TableRow>
                 <TableCell className="font-bold">{showGst ? 'Amount with GST' : 'Total Amount'}</TableCell>
-                <TableCell className="font-bold">{invoiceData.total.toLocaleString('en-IN')}</TableCell>
+                <TableCell className="font-bold">{formatNumber(total)}</TableCell>
               </TableRow>
             </TableBody>
           </Table>
