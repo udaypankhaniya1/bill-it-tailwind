@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
+import { getCurrentUserId } from '@/utils/supabaseClient';
 
 export interface Template {
   id: string;
@@ -49,11 +50,13 @@ export const fetchTemplate = async (id: string) => {
 
 export const createTemplate = async (template: Omit<Template, 'id' | 'user_id'>) => {
   const newTemplateId = uuidv4();
+  const userId = getCurrentUserId();
   
   const { error } = await supabase
     .from('templates')
     .insert({
       id: newTemplateId,
+      user_id: userId, // Add user_id which is required by the database
       ...template
     });
 

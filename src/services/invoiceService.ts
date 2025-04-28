@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
+import { getCurrentUserId } from '@/utils/supabaseClient';
 
 export interface InvoiceItem {
   id: string;
@@ -88,6 +89,7 @@ export const fetchInvoice = async (id: string) => {
 
 export const createInvoice = async (invoice: Omit<Invoice, 'id' | 'user_id'>) => {
   const newInvoiceId = uuidv4();
+  const userId = getCurrentUserId();
   
   // Insert the invoice
   const { error: invoiceError } = await supabase
@@ -100,6 +102,7 @@ export const createInvoice = async (invoice: Omit<Invoice, 'id' | 'user_id'>) =>
       subtotal: invoice.subtotal,
       gst: invoice.gst,
       total: invoice.total,
+      user_id: userId, // Add user_id which is required by the database
     });
 
   if (invoiceError) {
