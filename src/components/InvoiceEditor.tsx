@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -54,7 +53,7 @@ const InvoiceEditor = ({ onSave, initialContent }: InvoiceEditorProps) => {
   const currentTemplate = useSelector((state: RootState) => state.template.currentTemplate);
 
   // State for all invoice fields
-  const [showGst, setShowGst] = useState(currentTemplate?.showGst || false); // Changed from true to false
+  const [showGst, setShowGst] = useState<boolean>(currentTemplate?.showGst || false); 
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [partyName, setPartyName] = useState("Gulab Oil");
   const [invoiceDate, setInvoiceDate] = useState("2025-04-23");
