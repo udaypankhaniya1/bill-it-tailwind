@@ -1,7 +1,4 @@
 
-import { BlockNoteEditor } from "@blocknote/core";
-import { BlockNoteView, useBlockNote } from "@blocknote/react";
-import "@blocknote/core/style.css";
 import { useEffect, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -15,11 +12,25 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash } from "lucide-react";
+import { Plus, Trash, GripVertical } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/hooks/use-toast";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addInvoice } from "@/redux/slices/invoiceSlice";
+import { formatNumber } from "@/utils/formatNumber";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { RootState } from "@/redux/store";
+import { 
+  setCurrentTemplate,
+  Template
+} from "@/redux/slices/templateSlice";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 interface InvoiceItem {
   id: string;
@@ -38,8 +49,12 @@ const InvoiceEditor = ({ onSave, initialContent }: InvoiceEditorProps) => {
   const { toast } = useToast();
   const dispatch = useDispatch();
 
+  // Get templates from Redux store
+  const templates = useSelector((state: RootState) => state.template.templates);
+  const currentTemplate = useSelector((state: RootState) => state.template.currentTemplate);
+
   // State for all invoice fields
-  const [showGst, setShowGst] = useState(true);
+  const [showGst, setShowGst] = useState(currentTemplate?.showGst || true);
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [partyName, setPartyName] = useState("Gulab Oil");
   const [invoiceDate, setInvoiceDate] = useState("2025-04-23");
@@ -153,6 +168,15 @@ const InvoiceEditor = ({ onSave, initialContent }: InvoiceEditorProps) => {
     }
   ]);
 
+  // Update template when changed
+  const handleTemplateChange = (templateId: string) => {
+    const template = templates.find(t => t.id === templateId);
+    if (template) {
+      dispatch(setCurrentTemplate(template));
+      setShowGst(template.showGst);
+    }
+  };
+
   // Function to calculate totals
   const calculateTotals = () => {
     const subtotal = items.reduce((sum, item) => sum + item.total, 0);
@@ -204,10 +228,18 @@ const InvoiceEditor = ({ onSave, initialContent }: InvoiceEditorProps) => {
     setItems(updatedItems);
   };
 
-  // Format number to Indian currency format
-  const formatNumber = (value: number): string => {
-    const formatter = new Intl.NumberFormat('en-IN');
-    return formatter.format(value);
+  // Handle drag end for reordering items
+  const onDragEnd = (result: any) => {
+    // If dropped outside the list, do nothing
+    if (!result.destination) {
+      return;
+    }
+
+    const reorderedItems = Array.from(items);
+    const [removed] = reorderedItems.splice(result.source.index, 1);
+    reorderedItems.splice(result.destination.index, 0, removed);
+
+    setItems(reorderedItems);
   };
 
   // Save invoice
@@ -235,9 +267,6 @@ const InvoiceEditor = ({ onSave, initialContent }: InvoiceEditorProps) => {
     });
   };
 
-  // Create editor instance
-  const editor = useBlockNote({});
-
   // Get calculated totals
   const { subtotal, gst, total } = calculateTotals();
 
@@ -253,17 +282,51 @@ const InvoiceEditor = ({ onSave, initialContent }: InvoiceEditorProps) => {
           <Label htmlFor="gst-switch">Apply GST (18%)</Label>
         </div>
         
-        <Button onClick={saveInvoice}>Save Invoice</Button>
+        <div className="flex items-center gap-3">
+          <Select
+            value={currentTemplate?.id || "default"}
+            onValueChange={handleTemplateChange}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Select template" />
+            </SelectTrigger>
+            <SelectContent>
+              {templates.map((template) => (
+                <SelectItem key={template.id} value={template.id}>
+                  {template.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Button onClick={saveInvoice}>Save Invoice</Button>
+        </div>
       </div>
       
-      <div className="bg-white p-6 rounded-lg border shadow-sm">
-        <h1 className="text-3xl font-bold mb-2">Quotation</h1>
-        <p className="font-semibold mb-1">Sharda Mandap Service</p>
-        <p className="text-sm mb-1">Porbandar Baypass, Jalaram Nagar, Mangrol, Dist. Junagadh - 362225</p>
-        <p className="text-sm mb-4">
-          <span className="font-semibold">GST NO:</span> 24AOSPP7196L1ZX | 
-          <span className="font-semibold"> Mobile:</span> 98246 86047
-        </p>
+      <div 
+        className="bg-white p-6 rounded-lg border shadow-sm"
+        style={{
+          '--primary-color': currentTemplate?.primaryColor || 'blue',
+          '--secondary-color': currentTemplate?.secondaryColor || 'gray',
+        } as React.CSSProperties}
+      >
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h1 className={`text-3xl font-bold mb-2 ${currentTemplate?.fontSize.header || 'text-3xl'}`}>Quotation</h1>
+            <p className="font-semibold mb-1">Sharda Mandap Service</p>
+            <p className="text-sm mb-1">Porbandar Baypass, Jalaram Nagar, Mangrol, Dist. Junagadh - 362225</p>
+            <p className="text-sm mb-4">
+              <span className="font-semibold">GST NO:</span> 24AOSPP7196L1ZX | 
+              <span className="font-semibold"> Mobile:</span> 98246 86047
+            </p>
+          </div>
+          
+          {currentTemplate?.showLogo && (
+            <div className="w-32 h-32 border border-dashed rounded p-4 flex items-center justify-center">
+              <p className="text-sm text-gray-500">Business Logo</p>
+            </div>
+          )}
+        </div>
         
         <hr className="my-4" />
         
@@ -312,59 +375,82 @@ const InvoiceEditor = ({ onSave, initialContent }: InvoiceEditorProps) => {
         </div>
         
         <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Sr No</TableHead>
-                <TableHead>Description (વર્ણન)</TableHead>
-                <TableHead>Quantity (જથ્થો)</TableHead>
-                <TableHead>Rate (₹)</TableHead>
-                <TableHead>Total (₹)</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.map((item, index) => (
-                <TableRow key={item.id}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>
-                    <Input
-                      value={item.description}
-                      onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                      className="w-full"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      value={item.quantity}
-                      onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                      className="w-full"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      value={item.rate}
-                      onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
-                      className="w-full"
-                    />
-                  </TableCell>
-                  <TableCell>{formatNumber(item.total)}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeItem(index)}
-                      disabled={items.length <= 1}
-                    >
-                      <Trash className="h-4 w-4 text-red-500" />
-                    </Button>
-                  </TableCell>
+          <DragDropContext onDragEnd={onDragEnd}>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[30px]"></TableHead>
+                  <TableHead>Sr No</TableHead>
+                  <TableHead>Description (વર્ણન)</TableHead>
+                  <TableHead>Quantity (જથ્થો)</TableHead>
+                  <TableHead>Rate (₹)</TableHead>
+                  <TableHead>Total (₹)</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <Droppable droppableId="invoice-items">
+                {(provided) => (
+                  <TableBody
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                  >
+                    {items.map((item, index) => (
+                      <Draggable key={item.id} draggableId={item.id} index={index}>
+                        {(provided) => (
+                          <TableRow
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                          >
+                            <TableCell>
+                              <div {...provided.dragHandleProps} className="cursor-move">
+                                <GripVertical className="h-4 w-4 text-gray-400" />
+                              </div>
+                            </TableCell>
+                            <TableCell>{index + 1}</TableCell>
+                            <TableCell>
+                              <Input
+                                value={item.description}
+                                onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+                                className="w-full"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                value={item.quantity}
+                                onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                                className="w-full"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                value={item.rate}
+                                onChange={(e) => handleItemChange(index, 'rate', e.target.value)}
+                                className="w-full"
+                              />
+                            </TableCell>
+                            <TableCell>{formatNumber(item.total)}</TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeItem(index)}
+                                disabled={items.length <= 1}
+                              >
+                                <Trash className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </TableBody>
+                )}
+              </Droppable>
+            </Table>
+          </DragDropContext>
         </div>
 
         <hr className="my-4" />
@@ -399,12 +485,11 @@ const InvoiceEditor = ({ onSave, initialContent }: InvoiceEditorProps) => {
 
         <hr className="my-4" />
         
-        <p className="text-center text-sm mt-6">Generated by Sharda Mandap Service</p>
-        <p className="text-center text-sm">For inquiries, contact us at <span className="font-semibold">98246 86047</span></p>
-        
-        <div className="mt-8 border rounded-lg p-4">
-          <h3 className="text-md font-semibold mb-2">Rich Text Editor (Optional)</h3>
-          <BlockNoteView editor={editor} />
+        <div className="mt-6" style={{color: `var(--secondary-color)`}}>
+          <p className="text-center text-sm">Generated by Sharda Mandap Service</p>
+          {currentTemplate?.showContact && (
+            <p className="text-center text-sm">For inquiries, contact us at <span className="font-semibold">98246 86047</span></p>
+          )}
         </div>
       </div>
     </div>
