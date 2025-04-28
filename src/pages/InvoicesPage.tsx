@@ -1,24 +1,56 @@
 
-import { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { RootState } from '@/redux/store';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatNumber } from '@/utils/formatNumber';
 import { Search } from 'lucide-react';
+import { fetchInvoices, Invoice } from '@/services/invoiceService';
+import { useToast } from '@/hooks/use-toast';
 
 const InvoicesPage = () => {
-  const { invoices } = useSelector((state: RootState) => state.invoice);
-  const navigate = useNavigate();
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([]);
   const [search, setSearch] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const filteredInvoices = invoices.filter(
-    (invoice) =>
-      invoice.partyName.toLowerCase().includes(search.toLowerCase()) ||
-      invoice.invoiceNumber.toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => {
+    const loadInvoices = async () => {
+      try {
+        setIsLoading(true);
+        const data = await fetchInvoices();
+        setInvoices(data);
+        setFilteredInvoices(data);
+      } catch (error) {
+        console.error('Error loading invoices:', error);
+        toast({
+          variant: "destructive",
+          title: "Failed to load invoices",
+          description: "Please try again later",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadInvoices();
+  }, [toast]);
+
+  useEffect(() => {
+    if (search) {
+      const filtered = invoices.filter(
+        (invoice) =>
+          invoice.party_name.toLowerCase().includes(search.toLowerCase()) ||
+          invoice.invoice_number.toLowerCase().includes(search.toLowerCase())
+      );
+      setFilteredInvoices(filtered);
+    } else {
+      setFilteredInvoices(invoices);
+    }
+  }, [search, invoices]);
 
   return (
     <div className="container mx-auto p-6">
@@ -43,7 +75,11 @@ const InvoicesPage = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {filteredInvoices.length > 0 ? (
+          {isLoading ? (
+            <div className="py-12 text-center">
+              <p className="text-gray-500">Loading invoices...</p>
+            </div>
+          ) : filteredInvoices.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -58,8 +94,8 @@ const InvoicesPage = () => {
                 <tbody>
                   {filteredInvoices.map((invoice) => (
                     <tr key={invoice.id} className="border-b">
-                      <td className="p-3">{invoice.invoiceNumber}</td>
-                      <td className="p-3">{invoice.partyName}</td>
+                      <td className="p-3">{invoice.invoice_number}</td>
+                      <td className="p-3">{invoice.party_name}</td>
                       <td className="p-3">{invoice.date}</td>
                       <td className="text-right p-3">₹ {formatNumber(invoice.total)}</td>
                       <td className="text-right p-3">

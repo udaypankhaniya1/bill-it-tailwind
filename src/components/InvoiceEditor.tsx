@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -14,8 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Plus, Trash, GripVertical } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/hooks/use-toast";
-import { useDispatch, useSelector } from "react-redux";
-import { addInvoice } from "@/redux/slices/invoiceSlice";
 import { formatNumber } from "@/utils/formatNumber";
 import { 
   Select,
@@ -24,12 +23,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RootState } from "@/redux/store";
-import { 
-  setCurrentTemplate,
-  Template
-} from "@/redux/slices/templateSlice";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { useNavigate } from "react-router-dom";
+import { createInvoice, InvoiceItem as DbInvoiceItem } from "@/services/invoiceService";
+import { Template } from "@/services/templateService";
 
 interface InvoiceItem {
   id: string;
@@ -40,23 +37,31 @@ interface InvoiceItem {
 }
 
 interface InvoiceEditorProps {
+  templates: Template[];
   onSave?: (markdown: string) => void;
   initialContent?: string;
 }
 
-const InvoiceEditor = ({ onSave, initialContent }: InvoiceEditorProps) => {
+const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps) => {
   const { toast } = useToast();
-  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  // Get templates from Redux store
-  const templates = useSelector((state: RootState) => state.template.templates);
-  const currentTemplate = useSelector((state: RootState) => state.template.currentTemplate);
+  // Select default template from the available templates
+  const [currentTemplate, setCurrentTemplate] = useState<Template | null>(null);
+  
+  useEffect(() => {
+    if (templates.length > 0 && !currentTemplate) {
+      setCurrentTemplate(templates[0]);
+      setShowGst(templates[0].show_gst);
+    }
+  }, [templates, currentTemplate]);
 
   // State for all invoice fields
-  const [showGst, setShowGst] = useState<boolean>(currentTemplate?.showGst || false); 
-  const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [showGst, setShowGst] = useState<boolean>(false); 
+  const [invoiceNumber, setInvoiceNumber] = useState(`INV-${Date.now().toString().slice(-6)}`);
   const [partyName, setPartyName] = useState("Gulab Oil");
   const [invoiceDate, setInvoiceDate] = useState("2025-04-23");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Invoice items state
   const [items, setItems] = useState<InvoiceItem[]>([
@@ -73,97 +78,6 @@ const InvoiceEditor = ({ onSave, initialContent }: InvoiceEditorProps) => {
       quantity: 4950,
       rate: 33.33,
       total: 165000
-    },
-    {
-      id: uuidv4(),
-      description: "પ્રિન્ટ કાર્પેટ (55X120)",
-      quantity: 5,
-      rate: 6600,
-      total: 33000
-    },
-    {
-      id: uuidv4(),
-      description: "સ્ટેજ (40X20X2.5)",
-      quantity: 40,
-      rate: 800,
-      total: 32000
-    },
-    {
-      id: uuidv4(),
-      description: "સ્ટેજ બેગ્રાઉન્ડ (40X11)",
-      quantity: 25,
-      rate: 440,
-      total: 11000
-    },
-    {
-      id: uuidv4(),
-      description: "સોફા",
-      quantity: 16,
-      rate: 1200,
-      total: 19200
-    },
-    {
-      id: uuidv4(),
-      description: "ખુશી કવર+રીબીન",
-      quantity: 500,
-      rate: 30,
-      total: 15000
-    },
-    {
-      id: uuidv4(),
-      description: "ગાદલા",
-      quantity: 20,
-      rate: 30,
-      total: 600
-    },
-    {
-      id: uuidv4(),
-      description: "ટેબલ",
-      quantity: 150,
-      rate: 175,
-      total: 26250
-    },
-    {
-      id: uuidv4(),
-      description: "કમાન (ગેટ)",
-      quantity: 2,
-      rate: 700,
-      total: 1400
-    },
-    {
-      id: uuidv4(),
-      description: "નવ ફ્લોરિંગ (ડબલ) (sft)",
-      quantity: 15000,
-      rate: 3,
-      total: 45000
-    },
-    {
-      id: uuidv4(),
-      description: "સાઈડ જમણવાર માટે (sft)",
-      quantity: 2500,
-      rate: 10,
-      total: 25000
-    },
-    {
-      id: uuidv4(),
-      description: "રસોડા માટે મંડપ",
-      quantity: 8,
-      rate: 400,
-      total: 3200
-    },
-    {
-      id: uuidv4(),
-      description: "રાઉન્ડ ટેબલ",
-      quantity: 25,
-      rate: 300,
-      total: 7500
-    },
-    {
-      id: uuidv4(),
-      description: "જમણવાર માટે ખુરશી કવરવાળી",
-      quantity: 250,
-      rate: 20,
-      total: 5000
     }
   ]);
 
@@ -171,8 +85,8 @@ const InvoiceEditor = ({ onSave, initialContent }: InvoiceEditorProps) => {
   const handleTemplateChange = (templateId: string) => {
     const template = templates.find(t => t.id === templateId);
     if (template) {
-      dispatch(setCurrentTemplate(template));
-      setShowGst(template.showGst);
+      setCurrentTemplate(template);
+      setShowGst(template.show_gst);
     }
   };
 
@@ -242,32 +156,54 @@ const InvoiceEditor = ({ onSave, initialContent }: InvoiceEditorProps) => {
   };
 
   // Save invoice
-  const saveInvoice = () => {
+  const saveInvoice = async () => {
     const { subtotal, gst, total } = calculateTotals();
     
-    const invoice = {
-      id: uuidv4(),
-      invoiceNumber: invoiceNumber || `INV-${Date.now().toString().slice(-6)}`,
-      partyName,
-      date: invoiceDate,
-      items,
-      subtotal,
-      gst,
-      total,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    try {
+      setIsSubmitting(true);
+      
+      const invoiceData = {
+        invoice_number: invoiceNumber,
+        party_name: partyName,
+        date: invoiceDate,
+        items: items.map(item => ({
+          id: item.id,
+          description: item.description,
+          quantity: item.quantity,
+          rate: item.rate,
+          total: item.total
+        })),
+        subtotal,
+        gst,
+        total
+      };
 
-    dispatch(addInvoice(invoice));
+      await createInvoice(invoiceData);
 
-    toast({
-      title: "Invoice saved",
-      description: "Your invoice has been saved successfully",
-    });
+      toast({
+        title: "Invoice saved",
+        description: "Your invoice has been saved successfully",
+      });
+      
+      navigate('/invoices');
+    } catch (error) {
+      console.error('Error saving invoice:', error);
+      toast({
+        variant: "destructive",
+        title: "Failed to save invoice",
+        description: "Please try again later",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Get calculated totals
   const { subtotal, gst, total } = calculateTotals();
+
+  if (!currentTemplate && templates.length > 0) {
+    return <div>Loading templates...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -298,20 +234,22 @@ const InvoiceEditor = ({ onSave, initialContent }: InvoiceEditorProps) => {
             </SelectContent>
           </Select>
           
-          <Button onClick={saveInvoice}>Save Invoice</Button>
+          <Button onClick={saveInvoice} disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : 'Save Invoice'}
+          </Button>
         </div>
       </div>
       
       <div 
         className="bg-white p-6 rounded-lg border shadow-sm"
         style={{
-          '--primary-color': currentTemplate?.primaryColor || 'blue',
-          '--secondary-color': currentTemplate?.secondaryColor || 'gray',
+          '--primary-color': currentTemplate?.primary_color || 'blue',
+          '--secondary-color': currentTemplate?.secondary_color || 'gray',
         } as React.CSSProperties}
       >
         <div className="flex justify-between items-start mb-4">
           <div>
-            <h1 className={`text-3xl font-bold mb-2 ${currentTemplate?.fontSize.header || 'text-3xl'}`}>Quotation</h1>
+            <h1 className={`text-3xl font-bold mb-2 ${currentTemplate?.font_size_header || 'text-3xl'}`}>Quotation</h1>
             <p className="font-semibold mb-1">Sharda Mandap Service</p>
             <p className="text-sm mb-1">Porbandar Baypass, Jalaram Nagar, Mangrol, Dist. Junagadh - 362225</p>
             <p className="text-sm mb-4">
@@ -320,7 +258,7 @@ const InvoiceEditor = ({ onSave, initialContent }: InvoiceEditorProps) => {
             </p>
           </div>
           
-          {currentTemplate?.showLogo && (
+          {currentTemplate?.show_logo && (
             <div className="w-32 h-32 border border-dashed rounded p-4 flex items-center justify-center">
               <p className="text-sm text-gray-500">Business Logo</p>
             </div>
@@ -486,7 +424,7 @@ const InvoiceEditor = ({ onSave, initialContent }: InvoiceEditorProps) => {
         
         <div className="mt-6" style={{color: `var(--secondary-color)`}}>
           <p className="text-center text-sm">Generated by Sharda Mandap Service</p>
-          {currentTemplate?.showContact && (
+          {currentTemplate?.show_contact && (
             <p className="text-center text-sm">For inquiries, contact us at <span className="font-semibold">98246 86047</span></p>
           )}
         </div>

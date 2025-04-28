@@ -9,7 +9,134 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      invoice_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          invoice_id: string
+          quantity: number
+          rate: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          invoice_id: string
+          quantity?: number
+          rate?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          invoice_id?: string
+          quantity?: number
+          rate?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          created_at: string
+          date: string
+          gst: number
+          id: string
+          invoice_number: string
+          party_name: string
+          subtotal: number
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          gst?: number
+          id?: string
+          invoice_number: string
+          party_name: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          gst?: number
+          id?: string
+          invoice_number?: string
+          party_name?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      templates: {
+        Row: {
+          created_at: string
+          font_size_body: string
+          font_size_footer: string
+          font_size_header: string
+          id: string
+          name: string
+          primary_color: string
+          secondary_color: string
+          show_contact: boolean
+          show_gst: boolean
+          show_logo: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          font_size_body?: string
+          font_size_footer?: string
+          font_size_header?: string
+          id?: string
+          name: string
+          primary_color?: string
+          secondary_color?: string
+          show_contact?: boolean
+          show_gst?: boolean
+          show_logo?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          font_size_body?: string
+          font_size_footer?: string
+          font_size_header?: string
+          id?: string
+          name?: string
+          primary_color?: string
+          secondary_color?: string
+          show_contact?: boolean
+          show_gst?: boolean
+          show_logo?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
