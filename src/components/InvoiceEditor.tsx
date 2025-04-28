@@ -54,7 +54,7 @@ const InvoiceEditor = ({ onSave, initialContent }: InvoiceEditorProps) => {
   const currentTemplate = useSelector((state: RootState) => state.template.currentTemplate);
 
   // State for all invoice fields
-  const [showGst, setShowGst] = useState(currentTemplate?.showGst || true);
+  const [showGst, setShowGst] = useState(currentTemplate?.showGst || false); // Changed from true to false
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [partyName, setPartyName] = useState("Gulab Oil");
   const [invoiceDate, setInvoiceDate] = useState("2025-04-23");
@@ -277,7 +277,7 @@ const InvoiceEditor = ({ onSave, initialContent }: InvoiceEditorProps) => {
           <Switch
             id="gst-switch"
             checked={showGst}
-            onCheckedChange={setShowGst}
+            onCheckedChange={(checked: boolean) => setShowGst(checked)}
           />
           <Label htmlFor="gst-switch">Apply GST (18%)</Label>
         </div>
