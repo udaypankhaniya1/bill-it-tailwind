@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
-import { getCurrentUserId } from '@/utils/supabaseClient';
 
 export interface InvoiceItem {
   id: string;
@@ -27,6 +26,9 @@ export interface Invoice {
 }
 
 export const fetchInvoices = async () => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
   const { data, error } = await supabase
     .from('invoices')
     .select('*')
@@ -60,6 +62,9 @@ export const fetchInvoices = async () => {
 };
 
 export const fetchInvoice = async (id: string) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
   const { data, error } = await supabase
     .from('invoices')
     .select('*')
@@ -88,10 +93,12 @@ export const fetchInvoice = async (id: string) => {
 };
 
 export const createInvoice = async (invoice: Omit<Invoice, 'id' | 'user_id'>) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
   const newInvoiceId = uuidv4();
-  const userId = getCurrentUserId();
   
-  // Insert the invoice
+  // Insert the invoice with the current user's ID
   const { error: invoiceError } = await supabase
     .from('invoices')
     .insert({
@@ -102,7 +109,7 @@ export const createInvoice = async (invoice: Omit<Invoice, 'id' | 'user_id'>) =>
       subtotal: invoice.subtotal,
       gst: invoice.gst,
       total: invoice.total,
-      user_id: userId, // Add user_id which is required by the database
+      user_id: user.id,
     });
 
   if (invoiceError) {
@@ -129,6 +136,9 @@ export const createInvoice = async (invoice: Omit<Invoice, 'id' | 'user_id'>) =>
 };
 
 export const updateInvoice = async (invoice: Invoice) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
   // Update the invoice
   const { error: invoiceError } = await supabase
     .from('invoices')
@@ -178,6 +188,9 @@ export const updateInvoice = async (invoice: Invoice) => {
 };
 
 export const deleteInvoice = async (id: string) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
   const { error } = await supabase
     .from('invoices')
     .delete()
