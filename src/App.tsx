@@ -13,6 +13,7 @@ import Signup from "./pages/Signup";
 import DashboardPage from "./pages/DashboardPage";
 import CreateInvoicePage from "./pages/CreateInvoicePage";
 import InvoicesPage from "./pages/InvoicesPage";
+import InvoiceViewPage from "./pages/InvoiceViewPage";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, RequireAuth } from "./lib/auth";
@@ -38,6 +39,7 @@ const App = () => (
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/create-invoice" element={<CreateInvoicePage />} />
                 <Route path="/invoices" element={<InvoicesPage />} />
+                <Route path="/invoice/:id" element={<InvoiceViewPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
               </Route>
               

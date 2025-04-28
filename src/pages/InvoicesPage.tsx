@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatNumber } from '@/utils/formatNumber';
-import { Search } from 'lucide-react';
+import { Search, Eye, FilePdf } from 'lucide-react';
 import { fetchInvoices, Invoice } from '@/services/invoiceService';
 import { useToast } from '@/hooks/use-toast';
 
@@ -98,14 +98,13 @@ const InvoicesPage = () => {
                       <td className="p-3">{invoice.party_name}</td>
                       <td className="p-3">{invoice.date}</td>
                       <td className="text-right p-3">₹ {formatNumber(invoice.total)}</td>
-                      <td className="text-right p-3">
+                      <td className="text-right p-3 flex justify-end gap-2">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => navigate(`/invoice/${invoice.id}`)}
-                          className="mr-2"
                         >
-                          View
+                          <Eye size={16} className="mr-1" /> View
                         </Button>
                       </td>
                     </tr>
