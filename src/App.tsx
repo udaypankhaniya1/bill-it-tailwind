@@ -16,6 +16,7 @@ import InvoicesPage from "./pages/InvoicesPage";
 import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, RequireAuth } from "./lib/auth";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -49,5 +50,4 @@ const App = () => (
   </Provider>
 );
 
-import ProtectedRoute from "./components/ProtectedRoute";
 export default App;
