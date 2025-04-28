@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { getCurrentUserId } from '@/utils/supabaseClient';
@@ -20,6 +19,7 @@ export interface Template {
   user_id?: string;
   created_at?: string;
   updated_at?: string;
+  logo_url?: string;
 }
 
 export const fetchTemplates = async () => {
@@ -114,4 +114,18 @@ export const deleteTemplate = async (id: string) => {
   }
 
   return { success: true };
+};
+
+export const updateTemplateLogo = async (templateId: string, logoUrl: string) => {
+  const { error } = await supabase
+    .from('templates')
+    .update({ logo_url: logoUrl })
+    .eq('id', templateId);
+
+  if (error) {
+    console.error('Error updating template logo:', error);
+    throw error;
+  }
+
+  return { id: templateId, logoUrl };
 };

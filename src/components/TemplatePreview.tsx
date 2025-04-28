@@ -1,6 +1,8 @@
-
 import React from 'react';
 import { formatNumber } from '@/utils/formatNumber';
+import { uploadLogo } from '@/utils/fileUpload';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 interface TemplatePreviewProps {
   invoice: {
@@ -25,10 +27,37 @@ interface TemplatePreviewProps {
     showGst: boolean;
     showContact: boolean;
     showLogo: boolean;
+    logoUrl?: string;
   };
+  onLogoUpload?: (url: string) => void;
 }
 
-const TemplatePreview: React.FC<TemplatePreviewProps> = ({ invoice, template }) => {
+const TemplatePreview: React.FC<TemplatePreviewProps> = ({ invoice, template, onLogoUpload }) => {
+  const { toast } = useToast();
+  
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const url = await uploadLogo(file);
+      if (url && onLogoUpload) {
+        onLogoUpload(url);
+        toast({
+          title: "Logo uploaded successfully",
+          description: "Your template has been updated with the new logo.",
+        });
+      }
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      toast({
+        title: "Error uploading logo",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const {
     primaryColor,
     secondaryColor,
@@ -61,13 +90,30 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({ invoice, template }) 
           {showGst && <p className="text-xs mb-1"><span className="font-semibold">GST:</span> 24AOSPP7196L1ZX</p>}
           {showContact && <p className="text-xs mb-1"><span className="font-semibold">Phone:</span> 98246 86047</p>}
         </div>
-        {showLogo && (
-          <div className={`w-16 h-16 border border-dashed rounded flex items-center justify-center ${
+        {template.showLogo && (
+          <div className={`w-16 h-16 border rounded flex items-center justify-center ${
             headerPosition === 'center' ? 'absolute right-8' : 
             headerPosition === 'right' ? 'absolute left-8' : 
             'absolute right-8'
           }`}>
-            <span className="text-xs text-gray-400">Logo</span>
+            {template.logoUrl ? (
+              <img 
+                src={template.logoUrl} 
+                alt="Logo" 
+                className="max-w-full max-h-full object-contain"
+              />
+            ) : (
+              <div className="relative w-full h-full flex items-center justify-center">
+                <span className="text-xs text-gray-400">Logo</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  title="Upload logo"
+                />
+              </div>
+            )}
           </div>
         )}
       </div>

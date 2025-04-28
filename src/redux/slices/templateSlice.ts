@@ -1,4 +1,3 @@
-
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface Template {
@@ -19,6 +18,7 @@ export interface Template {
   footerDesign: 'simple' | 'detailed' | 'minimal';
   createdAt: string;
   updatedAt: string;
+  logoUrl?: string;
 }
 
 interface TemplateState {
@@ -46,6 +46,7 @@ const defaultTemplate: Template = {
   footerDesign: 'simple',
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
+  logoUrl: undefined,
 };
 
 const initialState: TemplateState = {
@@ -83,6 +84,15 @@ const templateSlice = createSlice({
         state.currentTemplate = state.templates[0] || null;
       }
     },
+    updateTemplateLogo(state, action: PayloadAction<{ id: string; logoUrl: string }>) {
+      const template = state.templates.find(t => t.id === action.payload.id);
+      if (template) {
+        template.logoUrl = action.payload.logoUrl;
+        if (state.currentTemplate?.id === action.payload.id) {
+          state.currentTemplate = template;
+        }
+      }
+    },
   },
 });
 
@@ -92,5 +102,6 @@ export const {
   setCurrentTemplate,
   updateTemplate,
   removeTemplate,
+  updateTemplateLogo,
 } = templateSlice.actions;
 export default templateSlice.reducer;
