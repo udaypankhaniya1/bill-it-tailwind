@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatNumber } from '@/utils/formatNumber';
-import { Search, Eye, FilePdf } from 'lucide-react';
+import { Search, Eye, FileText } from 'lucide-react';
 import { fetchInvoices, Invoice } from '@/services/invoiceService';
 import { useToast } from '@/hooks/use-toast';
 

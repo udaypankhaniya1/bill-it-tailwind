@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { fetchInvoice, Invoice } from '@/services/invoiceService';
 import InvoicePreview from '@/components/InvoicePreview';
 import { useToast } from '@/hooks/use-toast';
-import { FilePdf, FileText, Share } from 'lucide-react';
+import { FileText, Share } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -34,7 +34,7 @@ const InvoiceViewPage = () => {
           updatedAt: data.updated_at || '',
         };
 
-        setInvoice(transformedInvoice);
+        setInvoice(transformedInvoice as any);
       } catch (error) {
         console.error('Error loading invoice:', error);
         toast({
@@ -80,7 +80,7 @@ const InvoiceViewPage = () => {
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
       
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Invoice-${invoice.invoiceNumber}.pdf`);
+      pdf.save(`Invoice-${invoice.invoice_number}.pdf`);
       
       toast({
         title: "PDF Exported Successfully",
@@ -108,7 +108,7 @@ const InvoiceViewPage = () => {
       <html>
         <head>
           <meta charset="utf-8">
-          <title>Invoice ${invoice.invoiceNumber}</title>
+          <title>Invoice ${invoice.invoice_number}</title>
           <style>
             body { font-family: Arial, sans-serif; }
             table { width: 100%; border-collapse: collapse; }
@@ -125,7 +125,7 @@ const InvoiceViewPage = () => {
     const blob = new Blob([htmlContent], { type: 'application/msword' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `Invoice-${invoice.invoiceNumber}.doc`;
+    link.download = `Invoice-${invoice.invoice_number}.doc`;
     link.click();
     URL.revokeObjectURL(link.href);
 
@@ -138,7 +138,7 @@ const InvoiceViewPage = () => {
   const shareToWhatsApp = () => {
     if (!invoice) return;
     
-    const text = `Invoice #${invoice.invoiceNumber} for ${invoice.partyName}. Total Amount: ₹${invoice.total}`;
+    const text = `Invoice #${invoice.invoice_number} for ${invoice.party_name}. Total Amount: ₹${invoice.total}`;
     const url = encodeURIComponent(window.location.href);
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text + '\n\n' + url)}`;
     
@@ -181,14 +181,14 @@ const InvoiceViewPage = () => {
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold">Invoice #{invoice.invoiceNumber}</h2>
+        <h2 className="text-3xl font-bold">Invoice #{invoice.invoice_number}</h2>
         <div className="flex gap-2">
           <Button onClick={() => navigate('/invoices')} variant="outline">Back</Button>
           <Button onClick={exportAsDoc} variant="outline">
             <FileText className="mr-2" /> Export as Doc
           </Button>
           <Button onClick={exportAsPDF} variant="outline">
-            <FilePdf className="mr-2" /> Export as PDF
+            <FileText className="mr-2" /> Export as PDF
           </Button>
           <Button onClick={shareToWhatsApp} variant="outline">
             <Share className="mr-2" /> Share to WhatsApp
@@ -197,7 +197,7 @@ const InvoiceViewPage = () => {
       </div>
       
       <div id="invoice-preview" className="mb-8">
-        <InvoicePreview invoice={invoice} />
+        <InvoicePreview invoice={invoice as any} />
       </div>
     </div>
   );
