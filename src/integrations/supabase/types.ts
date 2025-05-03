@@ -96,6 +96,7 @@ export type Database = {
           font_size_footer: string
           font_size_header: string
           id: string
+          logo_url: string | null
           name: string
           primary_color: string
           secondary_color: string
@@ -111,6 +112,7 @@ export type Database = {
           font_size_footer?: string
           font_size_header?: string
           id?: string
+          logo_url?: string | null
           name: string
           primary_color?: string
           secondary_color?: string
@@ -126,6 +128,7 @@ export type Database = {
           font_size_footer?: string
           font_size_header?: string
           id?: string
+          logo_url?: string | null
           name?: string
           primary_color?: string
           secondary_color?: string

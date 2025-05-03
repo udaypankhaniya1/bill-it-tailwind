@@ -1,3 +1,4 @@
+
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface Template {
@@ -21,12 +22,138 @@ export interface Template {
   logoUrl?: string;
 }
 
+export interface ThemeOption {
+  id: string;
+  name: string;
+  mode: 'light' | 'dark';
+  colors: {
+    primary: string;
+    secondary: string;
+    background: string;
+    text: string;
+    border: string;
+    muted: string;
+  }
+}
+
 interface TemplateState {
   templates: Template[];
   currentTemplate: Template | null;
   isLoading: boolean;
   error: string | null;
+  currentTheme: string;
+  themes: ThemeOption[];
 }
+
+const lightThemes: ThemeOption[] = [
+  {
+    id: 'light-blue',
+    name: 'Azure Light',
+    mode: 'light',
+    colors: {
+      primary: '#3B82F6',
+      secondary: '#64748B',
+      background: '#FFFFFF',
+      text: '#1E293B',
+      border: '#E2E8F0',
+      muted: '#94A3B8',
+    }
+  },
+  {
+    id: 'light-green',
+    name: 'Emerald Light',
+    mode: 'light',
+    colors: {
+      primary: '#10B981',
+      secondary: '#64748B',
+      background: '#FFFFFF',
+      text: '#1E293B',
+      border: '#E2E8F0',
+      muted: '#94A3B8',
+    }
+  },
+  {
+    id: 'light-purple',
+    name: 'Lavender Light',
+    mode: 'light',
+    colors: {
+      primary: '#8B5CF6',
+      secondary: '#64748B',
+      background: '#FFFFFF',
+      text: '#1E293B',
+      border: '#E2E8F0',
+      muted: '#94A3B8',
+    }
+  },
+  {
+    id: 'light-amber',
+    name: 'Amber Light',
+    mode: 'light',
+    colors: {
+      primary: '#F59E0B',
+      secondary: '#64748B',
+      background: '#FFFFFF',
+      text: '#1E293B',
+      border: '#E2E8F0',
+      muted: '#94A3B8',
+    }
+  },
+];
+
+const darkThemes: ThemeOption[] = [
+  {
+    id: 'dark-blue',
+    name: 'Azure Dark',
+    mode: 'dark',
+    colors: {
+      primary: '#60A5FA',
+      secondary: '#94A3B8',
+      background: '#0F172A',
+      text: '#F8FAFC',
+      border: '#1E293B',
+      muted: '#64748B',
+    }
+  },
+  {
+    id: 'dark-green',
+    name: 'Emerald Dark',
+    mode: 'dark',
+    colors: {
+      primary: '#34D399',
+      secondary: '#94A3B8',
+      background: '#0F172A',
+      text: '#F8FAFC',
+      border: '#1E293B',
+      muted: '#64748B',
+    }
+  },
+  {
+    id: 'dark-purple',
+    name: 'Lavender Dark',
+    mode: 'dark',
+    colors: {
+      primary: '#A78BFA',
+      secondary: '#94A3B8',
+      background: '#0F172A',
+      text: '#F8FAFC',
+      border: '#1E293B',
+      muted: '#64748B',
+    }
+  },
+  {
+    id: 'dark-amber',
+    name: 'Amber Dark',
+    mode: 'dark',
+    colors: {
+      primary: '#FBBF24',
+      secondary: '#94A3B8',
+      background: '#0F172A',
+      text: '#F8FAFC',
+      border: '#1E293B',
+      muted: '#64748B',
+    }
+  },
+];
 
 const defaultTemplate: Template = {
   id: 'default',
@@ -54,6 +181,8 @@ const initialState: TemplateState = {
   currentTemplate: defaultTemplate,
   isLoading: false,
   error: null,
+  currentTheme: 'light-blue',
+  themes: [...lightThemes, ...darkThemes],
 };
 
 const templateSlice = createSlice({
@@ -93,6 +222,9 @@ const templateSlice = createSlice({
         }
       }
     },
+    setCurrentTheme(state, action: PayloadAction<string>) {
+      state.currentTheme = action.payload;
+    },
   },
 });
 
@@ -103,5 +235,6 @@ export const {
   updateTemplate,
   removeTemplate,
   updateTemplateLogo,
+  setCurrentTheme,
 } = templateSlice.actions;
 export default templateSlice.reducer;
