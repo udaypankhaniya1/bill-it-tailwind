@@ -32,6 +32,7 @@ interface InvoiceItem {
   id: string;
   description: string;
   quantity: number;
+  unit: string;
   rate: number;
   total: number;
 }
@@ -69,6 +70,7 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
       id: uuidv4(),
       description: "મેન ગેટ",
       quantity: 2,
+      unit: "pcs",
       rate: 7000,
       total: 14000
     },
@@ -76,6 +78,7 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
       id: uuidv4(),
       description: "Dom (sft)",
       quantity: 4950,
+      unit: "sft",
       rate: 33.33,
       total: 165000
     }
@@ -128,6 +131,7 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
         id: uuidv4(),
         description: '',
         quantity: 1,
+        unit: 'pcs',
         rate: 0,
         total: 0
       }
@@ -170,6 +174,7 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
           id: item.id,
           description: item.description,
           quantity: item.quantity,
+          unit: item.unit,
           rate: item.rate,
           total: item.total
         })),
@@ -320,6 +325,7 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
                   <TableHead>Sr No</TableHead>
                   <TableHead>Description (વર્ણન)</TableHead>
                   <TableHead>Quantity (જથ્થો)</TableHead>
+                  <TableHead>Unit</TableHead>
                   <TableHead>Rate (₹)</TableHead>
                   <TableHead>Total (₹)</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
@@ -357,6 +363,14 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
                                 value={item.quantity}
                                 onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
                                 className="w-full"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                value={item.unit}
+                                onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
+                                className="w-full"
+                                placeholder="pcs"
                               />
                             </TableCell>
                             <TableCell>

@@ -22,6 +22,7 @@ const InvoiceForm = () => {
       id: uuidv4(),
       description: '',
       quantity: 1,
+      unit: 'pcs',
       rate: 0,
       total: 0,
     },
@@ -57,6 +58,7 @@ const InvoiceForm = () => {
         id: uuidv4(),
         description: '',
         quantity: 1,
+        unit: 'pcs',
         rate: 0,
         total: 0,
       },
@@ -115,6 +117,7 @@ const InvoiceForm = () => {
       id: uuidv4(),
       description: '',
       quantity: 1,
+      unit: 'pcs',
       rate: 0,
       total: 0,
     }]);
@@ -181,6 +184,7 @@ const InvoiceForm = () => {
                       <th>Sr No</th>
                       <th>Description</th>
                       <th>Quantity</th>
+                      <th>Unit</th>
                       <th>Rate (₹)</th>
                       <th>Total (₹)</th>
                       {!showPreview && <th></th>}
@@ -214,6 +218,18 @@ const InvoiceForm = () => {
                               onChange={(e) => handleItemChange(index, 'quantity', parseInt(e.target.value) || 0)}
                               className="border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:ring-offset-0 w-20"
                               required
+                            />
+                          )}
+                        </td>
+                        <td>
+                          {showPreview ? (
+                            item.unit
+                          ) : (
+                            <Input
+                              value={item.unit}
+                              onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
+                              placeholder="pcs"
+                              className="border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:ring-offset-0 w-20"
                             />
                           )}
                         </td>
