@@ -20,7 +20,26 @@ const CreateInvoicePage = () => {
         setIsLoading(true);
         const data = await fetchTemplates();
         if (data && data.length > 0) {
-          setTemplates(data);
+          // Transform received data to ensure template properties have the correct types
+          const formattedTemplates = data.map(template => ({
+            id: template.id,
+            name: template.name,
+            primary_color: template.primary_color,
+            secondary_color: template.secondary_color,
+            font_size_header: template.font_size_header,
+            font_size_body: template.font_size_body,
+            font_size_footer: template.font_size_footer,
+            show_gst: template.show_gst,
+            show_contact: template.show_contact,
+            show_logo: template.show_logo,
+            // Cast header_position to the specific allowed types
+            header_position: (template.header_position || 'center') as 'left' | 'center' | 'right',
+            table_color: template.table_color || '#f8f9fa',
+            footer_design: (template.footer_design || 'simple') as 'simple' | 'detailed' | 'minimal',
+            logo_url: template.logo_url
+          }));
+          
+          setTemplates(formattedTemplates);
         } else {
           // If no templates, provide a default one
           setTemplates([{
