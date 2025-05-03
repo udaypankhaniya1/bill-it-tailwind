@@ -109,7 +109,7 @@ const CreateInvoicePage = () => {
     };
     loadTemplates();
   }, [toast]);
-  return <div className="w-full my-0 mx-[50px] px-[50px]">
+  return <div className="w-full my-0 px-[50px] mx-0">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <h2 className="text-2xl md:text-3xl font-bold">Create Invoice</h2>
         <div className="flex flex-wrap gap-3">
