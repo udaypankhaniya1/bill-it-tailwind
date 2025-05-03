@@ -1,55 +1,63 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { Provider } from "react-redux";
-import { store } from "./redux/store";
+import { useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
 
 // Pages
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import DashboardPage from "./pages/DashboardPage";
-import CreateInvoicePage from "./pages/CreateInvoicePage";
-import InvoicesPage from "./pages/InvoicesPage";
-import InvoiceViewPage from "./pages/InvoiceViewPage";
-import SettingsPage from "./pages/SettingsPage";
-import NotFound from "./pages/NotFound";
-import { AuthProvider, RequireAuth } from "./lib/auth";
-import ProtectedRoute from "./components/ProtectedRoute";
+import DashboardPage from '@/pages/DashboardPage';
+import InvoicesPage from '@/pages/InvoicesPage';
+import InvoiceViewPage from '@/pages/InvoiceViewPage';
+import CreateInvoicePage from '@/pages/CreateInvoicePage';
+import SettingsPage from '@/pages/SettingsPage';
+import Login from '@/pages/Login';
+import Signup from '@/pages/Signup';
+import NotFound from '@/pages/NotFound';
 
-const queryClient = new QueryClient();
+// Components
+import ProtectedRoute from '@/components/ProtectedRoute';
+import { Toaster } from '@/components/ui/toaster';
 
-const App = () => (
-  <Provider store={store}>
-    <BrowserRouter>
-      <AuthProvider>
-        <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
-            <Routes>
-              <Route path="/" element={<Navigate to="/login" />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              
-              {/* Protected Routes */}
-              <Route element={<RequireAuth><ProtectedRoute /></RequireAuth>}>
-                <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/create-invoice" element={<CreateInvoicePage />} />
-                <Route path="/invoices" element={<InvoicesPage />} />
-                <Route path="/invoice/:id" element={<InvoiceViewPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-              </Route>
-              
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Toaster />
-            <Sonner />
-          </TooltipProvider>
-        </QueryClientProvider>
-      </AuthProvider>
-    </BrowserRouter>
-  </Provider>
-);
+// Utils
+import { initializeTheme, applyThemeStyles } from '@/utils/themeUtils';
+import { ThemeOption } from './redux/slices/templateSlice';
+
+const App = () => {
+  const dispatch = useDispatch();
+  const themes = useSelector((state: RootState) => state.template.themes);
+  
+  // Initialize theme from local storage
+  useEffect(() => {
+    const { themeId, fontFamily } = initializeTheme();
+    
+    // Set the theme in Redux store
+    dispatch({ type: 'template/setCurrentTheme', payload: themeId });
+    
+    // Find the theme and apply it
+    const theme = themes.find((t: ThemeOption) => t.id === themeId);
+    if (theme) {
+      applyThemeStyles(theme, fontFamily);
+    }
+  }, [dispatch, themes]);
+  
+  return (
+    <>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+        <Route path="/invoices" element={<ProtectedRoute><InvoicesPage /></ProtectedRoute>} />
+        <Route path="/invoices/:id" element={<ProtectedRoute><InvoiceViewPage /></ProtectedRoute>} />
+        <Route path="/create-invoice" element={<ProtectedRoute><CreateInvoicePage /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+        
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <Toaster />
+    </>
+  );
+};
 
 export default App;

@@ -68,7 +68,24 @@ export default {
 					indigo: '#4F46E5',
 					slate: '#64748B',
 					background: '#F9FAFB',
-				}
+				},
+				// Theme specific color palettes
+				azure: {
+					light: '#3B82F6',
+					dark: '#60A5FA',
+				},
+				emerald: {
+					light: '#10B981',
+					dark: '#34D399',
+				},
+				lavender: {
+					light: '#8B5CF6',
+					dark: '#A78BFA',
+				},
+				amber: {
+					light: '#F59E0B',
+					dark: '#FBBF24',
+				},
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -99,7 +116,17 @@ export default {
 			},
 			fontFamily: {
 				sans: ['Inter', 'sans-serif'],
+				inter: ['Inter', 'sans-serif'],
+				roboto: ['Roboto', 'sans-serif'],
+				poppins: ['Poppins', 'sans-serif'],
+				montserrat: ['Montserrat', 'sans-serif'],
+				opensans: ['Open Sans', 'sans-serif'],
 			},
+			boxShadow: {
+				'light': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+				'medium': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+				'dark': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+			}
 		}
 	},
 	plugins: [require("tailwindcss-animate")],

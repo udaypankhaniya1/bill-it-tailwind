@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { applyThemeStyles } from '@/utils/themeUtils';
 
 interface ProfileSettingsProps {
   businessName: string;
@@ -40,8 +41,24 @@ const ProfileSettings = ({
   const currentTheme = useSelector((state: RootState) => state.template.currentTheme);
   const [selectedFont, setSelectedFont] = useState<string>('inter');
   
+  useEffect(() => {
+    // Apply theme when component mounts or theme changes
+    const theme = themes.find(t => t.id === currentTheme);
+    if (theme) {
+      applyThemeStyles(theme, selectedFont);
+    }
+  }, [currentTheme, themes]);
+  
   const handleThemeChange = (themeId: string) => {
     dispatch(setCurrentTheme(themeId));
+    
+    // Find the selected theme
+    const theme = themes.find(t => t.id === themeId);
+    if (theme) {
+      // Apply the theme styles
+      applyThemeStyles(theme, selectedFont);
+    }
+    
     toast({
       title: "Theme updated",
       description: "Your theme settings have been updated successfully",
@@ -50,7 +67,13 @@ const ProfileSettings = ({
   
   const handleFontChange = (value: string) => {
     setSelectedFont(value);
-    // In a real app, we would save this to the user's preferences
+    
+    // Find current theme and reapply with new font
+    const theme = themes.find(t => t.id === currentTheme);
+    if (theme) {
+      applyThemeStyles(theme, value);
+    }
+    
     toast({
       title: "Font updated",
       description: "Your font settings have been updated successfully",
@@ -139,7 +162,7 @@ const ProfileSettings = ({
               </Select>
               <div className="mt-4">
                 <p className="mb-2 text-sm text-muted-foreground">Preview:</p>
-                <div className={`p-4 border rounded-md ${selectedFont === 'inter' ? 'font-sans' : selectedFont}`}>
+                <div className={`p-4 border rounded-md font-${selectedFont}`}>
                   <p className="text-2xl font-bold mb-2">The quick brown fox jumps over the lazy dog</p>
                   <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, nisl nec ultricies lacinia.</p>
                 </div>
