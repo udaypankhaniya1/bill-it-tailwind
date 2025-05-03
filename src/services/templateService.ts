@@ -54,7 +54,9 @@ export const fetchTemplate = async (id: string) => {
 
 export const createTemplate = async (template: Omit<Template, 'id' | 'user_id'>) => {
   const newTemplateId = uuidv4();
-  const userId = getCurrentUserId();
+  
+  // Get the user ID before making the database call
+  const userId = await getCurrentUserId();
   
   const { error } = await supabase
     .from('templates')

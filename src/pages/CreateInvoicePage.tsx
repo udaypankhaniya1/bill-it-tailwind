@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import InvoiceEditor from '@/components/InvoiceEditor';
 import { Button } from '@/components/ui/button';
@@ -21,7 +20,7 @@ const CreateInvoicePage = () => {
         setIsLoading(true);
         
         // Check if user is authenticated
-        const userId = getCurrentUserId();
+        const userId = await getCurrentUserId();
         if (!userId) {
           console.warn('No authenticated user found');
           // Use default template if not authenticated
