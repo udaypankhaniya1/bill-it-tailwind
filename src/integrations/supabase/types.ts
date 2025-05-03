@@ -18,6 +18,7 @@ export type Database = {
           quantity: number
           rate: number
           total: number
+          unit: string
           updated_at: string
         }
         Insert: {
@@ -28,6 +29,7 @@ export type Database = {
           quantity?: number
           rate?: number
           total?: number
+          unit?: string
           updated_at?: string
         }
         Update: {
@@ -38,6 +40,7 @@ export type Database = {
           quantity?: number
           rate?: number
           total?: number
+          unit?: string
           updated_at?: string
         }
         Relationships: [
