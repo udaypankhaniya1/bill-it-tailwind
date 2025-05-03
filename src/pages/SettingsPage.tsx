@@ -81,9 +81,9 @@ const SettingsPage = () => {
             showGst: template.show_gst,
             showContact: template.show_contact,
             showLogo: template.show_logo,
-            headerPosition: template.header_position || 'center',
+            headerPosition: template.header_position as 'left' | 'center' | 'right' || 'center',
             tableColor: template.table_color || '#f8f9fa',
-            footerDesign: template.footer_design || 'simple',
+            footerDesign: template.footer_design as 'simple' | 'detailed' | 'minimal' || 'simple',
             createdAt: template.created_at || new Date().toISOString(),
             updatedAt: template.updated_at || new Date().toISOString(),
             logoUrl: template.logo_url
