@@ -95,6 +95,8 @@ export type Database = {
           font_size_body: string
           font_size_footer: string
           font_size_header: string
+          footer_design: string | null
+          header_position: string | null
           id: string
           logo_url: string | null
           name: string
@@ -103,6 +105,7 @@ export type Database = {
           show_contact: boolean
           show_gst: boolean
           show_logo: boolean
+          table_color: string | null
           updated_at: string
           user_id: string
         }
@@ -111,6 +114,8 @@ export type Database = {
           font_size_body?: string
           font_size_footer?: string
           font_size_header?: string
+          footer_design?: string | null
+          header_position?: string | null
           id?: string
           logo_url?: string | null
           name: string
@@ -119,6 +124,7 @@ export type Database = {
           show_contact?: boolean
           show_gst?: boolean
           show_logo?: boolean
+          table_color?: string | null
           updated_at?: string
           user_id: string
         }
@@ -127,6 +133,8 @@ export type Database = {
           font_size_body?: string
           font_size_footer?: string
           font_size_header?: string
+          footer_design?: string | null
+          header_position?: string | null
           id?: string
           logo_url?: string | null
           name?: string
@@ -135,6 +143,7 @@ export type Database = {
           show_contact?: boolean
           show_gst?: boolean
           show_logo?: boolean
+          table_color?: string | null
           updated_at?: string
           user_id?: string
         }
