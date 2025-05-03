@@ -3,6 +3,9 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { loginSuccess, logout as logoutAction } from '@/redux/slices/authSlice';
+import { useToast } from '@/hooks/use-toast';
 
 type AuthContextType = {
   session: Session | null;
@@ -22,6 +25,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const dispatch = useDispatch();
+  const { toast } = useToast();
   
   useEffect(() => {
     // Set up auth state listener
@@ -29,6 +34,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       (event, currentSession) => {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
+        
+        if (event === 'SIGNED_IN' && currentSession?.user) {
+          dispatch(loginSuccess({
+            id: currentSession.user.id,
+            email: currentSession.user.email || '',
+            name: currentSession.user.user_metadata?.name || currentSession.user.email?.split('@')[0] || 'User'
+          }));
+          toast({
+            title: "Logged in",
+            description: "You have been logged in successfully",
+          });
+        } else if (event === 'SIGNED_OUT') {
+          dispatch(logoutAction());
+          toast({
+            title: "Logged out",
+            description: "You have been logged out successfully",
+          });
+        }
       }
     );
 
@@ -36,11 +59,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
+      
+      if (currentSession?.user) {
+        dispatch(loginSuccess({
+          id: currentSession.user.id,
+          email: currentSession.user.email || '',
+          name: currentSession.user.user_metadata?.name || currentSession.user.email?.split('@')[0] || 'User'
+        }));
+      }
+      
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [dispatch, toast]);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -70,7 +102,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (signUpError) {
         setError(signUpError.message);
       } else {
-        setError('Check your email for a confirmation link.');
+        toast({
+          title: "Account created",
+          description: "Check your email for a confirmation link.",
+        });
       }
     } catch (err) {
       setError('Failed to sign up. Please try again.');
@@ -82,6 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
       await supabase.auth.signOut();
+      dispatch(logoutAction());
     } catch (err) {
       setError('Failed to sign out. Please try again.');
       console.error(err);

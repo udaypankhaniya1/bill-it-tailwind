@@ -6,6 +6,7 @@ import { useDispatch } from 'react-redux';
 import { logout } from '@/redux/slices/authSlice';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/auth';
 
 type SidebarItem = {
   title: string;
@@ -25,9 +26,10 @@ export const AppSidebar = ({ isMobile, isSidebarOpen, onSidebarToggle }: AppSide
   const navigate = useNavigate();
   const { toast } = useToast();
   const dispatch = useDispatch();
+  const { signOut } = useAuth();
 
-  const handleLogout = () => {
-    dispatch(logout());
+  const handleLogout = async () => {
+    await signOut();
     toast({
       title: "Logged out",
       description: "You have been logged out successfully",
@@ -51,6 +53,11 @@ export const AppSidebar = ({ isMobile, isSidebarOpen, onSidebarToggle }: AppSide
       title: 'Invoices',
       icon: <FileText className="h-5 w-5" />,
       path: '/invoices',
+    },
+    {
+      title: 'Profile',
+      icon: <User className="h-5 w-5" />,
+      path: '/profile',
     },
     {
       title: 'Settings',
