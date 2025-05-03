@@ -2,26 +2,16 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
-import { addTemplate, updateTemplate, Template, setCurrentTheme } from '@/redux/slices/templateSlice';
+import { addTemplate, updateTemplate, removeTemplate } from '@/redux/slices/templateSlice';
 import { v4 as uuidv4 } from 'uuid';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import TemplatePreview from '@/components/TemplatePreview';
-import { createTemplate, fetchTemplates, updateTemplate as updateTemplateService } from '@/services/templateService';
-import { AlertCircle, CheckCircle, FileText, Plus, Trash } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import TemplateCreator from '@/components/TemplateCreator';
+import ProfileSettings from '@/components/ProfileSettings';
+import { createTemplate, fetchTemplates, updateTemplate as updateTemplateService, deleteTemplate } from '@/services/templateService';
+import { FileText, Plus, Trash } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,9 +27,6 @@ const SettingsPage = () => {
   const { toast } = useToast();
   const dispatch = useDispatch();
   const templates = useSelector((state: RootState) => state.template.templates);
-  const currentTemplate = useSelector((state: RootState) => state.template.currentTemplate);
-  const themes = useSelector((state: RootState) => state.template.themes);
-  const currentTheme = useSelector((state: RootState) => state.template.currentTheme);
   
   const [businessName, setBusinessName] = useState('Sharda Mandap Service');
   const [address, setAddress] = useState('Porbandar Baypass, Jalaram Nagar, Mangrol, Dist. Junagadh - 362225');
@@ -50,16 +37,7 @@ const SettingsPage = () => {
   const [templateToDelete, setTemplateToDelete] = useState<string | null>(null);
   
   // Template editing state
-  const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
-  const [templateName, setTemplateName] = useState('');
-  const [primaryColor, setPrimaryColor] = useState('blue');
-  const [secondaryColor, setSecondaryColor] = useState('gray');
-  const [tableColor, setTableColor] = useState('#f8f9fa');
-  const [headerPosition, setHeaderPosition] = useState<'left' | 'center' | 'right'>('center');
-  const [footerDesign, setFooterDesign] = useState<'simple' | 'detailed' | 'minimal'>('simple');
-  const [showGst, setShowGst] = useState(true);
-  const [showContact, setShowContact] = useState(true);
-  const [showLogo, setShowLogo] = useState(true);
+  const [editingTemplate, setEditingTemplate] = useState<any | null>(null);
   
   // Load templates from API
   useEffect(() => {
@@ -130,30 +108,12 @@ const SettingsPage = () => {
     });
   };
   
-  const handleEditTemplate = (template: Template) => {
+  const handleEditTemplate = (template: any) => {
     setEditingTemplate(template);
-    setTemplateName(template.name);
-    setPrimaryColor(template.primaryColor);
-    setSecondaryColor(template.secondaryColor);
-    setTableColor(template.tableColor || '#f8f9fa');
-    setHeaderPosition(template.headerPosition || 'center');
-    setFooterDesign(template.footerDesign || 'simple');
-    setShowGst(template.showGst);
-    setShowContact(template.showContact);
-    setShowLogo(template.showLogo);
   };
   
   const handleCreateTemplate = () => {
-    setEditingTemplate(null);
-    setTemplateName('New Template');
-    setPrimaryColor('blue');
-    setSecondaryColor('gray');
-    setTableColor('#f8f9fa');
-    setHeaderPosition('center');
-    setFooterDesign('simple');
-    setShowGst(true);
-    setShowContact(true);
-    setShowLogo(true);
+    setEditingTemplate({});
   };
 
   const handleConfirmDeleteTemplate = (templateId: string) => {
@@ -161,86 +121,127 @@ const SettingsPage = () => {
     setConfirmDeleteOpen(true);
   };
   
-  const handleDeleteTemplate = () => {
+  const handleDeleteTemplate = async () => {
     if (templateToDelete) {
-      dispatch({ type: 'template/removeTemplate', payload: templateToDelete });
-      toast({
-        title: "Template deleted",
-        description: "Template has been deleted successfully",
-      });
-      setTemplateToDelete(null);
+      try {
+        setIsLoading(true);
+        await deleteTemplate(templateToDelete);
+        dispatch(removeTemplate(templateToDelete));
+        toast({
+          title: "Template deleted",
+          description: "Template has been deleted successfully",
+        });
+      } catch (error) {
+        console.error("Error deleting template:", error);
+        toast({
+          variant: "destructive",
+          title: "Failed to delete template",
+          description: "Please try again later",
+        });
+      } finally {
+        setIsLoading(false);
+        setTemplateToDelete(null);
+        setConfirmDeleteOpen(false);
+      }
     }
-    setConfirmDeleteOpen(false);
   };
   
-  const handleSaveTemplate = async () => {
-    const template: Template = {
-      id: editingTemplate?.id || uuidv4(),
-      name: templateName,
-      primaryColor,
-      secondaryColor,
-      tableColor,
-      headerPosition,
-      footerDesign,
-      fontSize: {
-        header: 'text-3xl',
-        body: 'text-base',
-        footer: 'text-sm',
-      },
-      showGst,
-      showContact,
-      showLogo,
-      createdAt: editingTemplate?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    
+  const handleCancelTemplateEdit = () => {
+    setEditingTemplate(null);
+  };
+  
+  const handleSaveTemplate = async (templateData: any) => {
     try {
       setIsLoading(true);
       
-      if (editingTemplate) {
+      if (editingTemplate.id) {
+        // Update existing template
+        const template = {
+          id: editingTemplate.id,
+          name: templateData.name,
+          primaryColor: templateData.primary_color,
+          secondaryColor: templateData.secondary_color,
+          fontSize: {
+            header: templateData.font_size_header || 'text-3xl',
+            body: templateData.font_size_body || 'text-base', 
+            footer: templateData.font_size_footer || 'text-sm'
+          },
+          showGst: templateData.show_gst,
+          showContact: templateData.show_contact,
+          showLogo: templateData.show_logo,
+          headerPosition: templateData.header_position,
+          tableColor: templateData.table_color,
+          footerDesign: templateData.footer_design,
+          createdAt: editingTemplate.createdAt,
+          updatedAt: new Date().toISOString(),
+          logoUrl: editingTemplate.logoUrl
+        };
+        
         // Update template in database
         await updateTemplateService({
           id: template.id,
-          name: template.name,
-          primary_color: template.primaryColor,
-          secondary_color: template.secondaryColor,
-          font_size_header: template.fontSize.header,
-          font_size_body: template.fontSize.body,
-          font_size_footer: template.fontSize.footer,
-          show_gst: template.showGst,
-          show_contact: template.showContact,
-          show_logo: template.showLogo,
-          header_position: template.headerPosition,
-          table_color: template.tableColor,
-          footer_design: template.footerDesign
+          name: templateData.name,
+          primary_color: templateData.primary_color,
+          secondary_color: templateData.secondary_color,
+          font_size_header: templateData.font_size_header || 'text-3xl',
+          font_size_body: templateData.font_size_body || 'text-base',
+          font_size_footer: templateData.font_size_footer || 'text-sm',
+          show_gst: templateData.show_gst,
+          show_contact: templateData.show_contact,
+          show_logo: templateData.show_logo,
+          header_position: templateData.header_position,
+          table_color: templateData.table_color,
+          footer_design: templateData.footer_design
         });
         
         dispatch(updateTemplate(template));
         toast({
           title: "Template updated",
-          description: `Template "${templateName}" has been updated successfully`,
+          description: `Template "${templateData.name}" has been updated successfully`,
         });
       } else {
+        // Create new template
+        const newTemplateId = uuidv4();
+        const template = {
+          id: newTemplateId,
+          name: templateData.name,
+          primaryColor: templateData.primary_color,
+          secondaryColor: templateData.secondary_color,
+          fontSize: {
+            header: templateData.font_size_header || 'text-3xl',
+            body: templateData.font_size_body || 'text-base',
+            footer: templateData.font_size_footer || 'text-sm'
+          },
+          showGst: templateData.show_gst,
+          showContact: templateData.show_contact,
+          showLogo: templateData.show_logo,
+          headerPosition: templateData.header_position,
+          tableColor: templateData.table_color,
+          footerDesign: templateData.footer_design,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        
         // Create new template in database
         await createTemplate({
-          name: template.name,
-          primary_color: template.primaryColor,
-          secondary_color: template.secondaryColor,
-          font_size_header: template.fontSize.header,
-          font_size_body: template.fontSize.body,
-          font_size_footer: template.fontSize.footer,
-          show_gst: template.showGst,
-          show_contact: template.showContact,
-          show_logo: template.showLogo,
-          header_position: template.headerPosition,
-          table_color: template.tableColor,
-          footer_design: template.footerDesign
+          name: templateData.name,
+          primary_color: templateData.primary_color,
+          secondary_color: templateData.secondary_color,
+          font_size_header: templateData.font_size_header || 'text-3xl',
+          font_size_body: templateData.font_size_body || 'text-base',
+          font_size_footer: templateData.font_size_footer || 'text-sm',
+          show_gst: templateData.show_gst,
+          show_contact: templateData.show_contact,
+          show_logo: templateData.show_logo,
+          header_position: templateData.header_position,
+          table_color: templateData.table_color,
+          footer_design: templateData.footer_design
         });
         
         dispatch(addTemplate(template));
         toast({
           title: "Template created",
-          description: `Template "${templateName}" has been created successfully`,
+          description: `Template "${templateData.name}" has been created successfully`,
         });
       }
     } catch (error) {
@@ -257,18 +258,14 @@ const SettingsPage = () => {
     }
   };
 
-  const handleThemeChange = (themeId: string) => {
-    dispatch(setCurrentTheme(themeId));
-  };
-
   return (
     <div className="w-full max-w-7xl mx-auto">
       <h2 className="text-3xl font-bold mb-6">Settings</h2>
       
       <Tabs defaultValue="templates">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
+        <TabsList className="grid grid-cols-2 mb-6">
           <TabsTrigger value="templates">Templates</TabsTrigger>
-          <TabsTrigger value="business">Business Information</TabsTrigger>
+          <TabsTrigger value="profile">Profile & Theme</TabsTrigger>
         </TabsList>
         
         <TabsContent value="templates">
@@ -298,411 +295,125 @@ const SettingsPage = () => {
                     </Button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {isLoading ? (
-                      // Template loading skeletons
-                      Array(3).fill(0).map((_, i) => (
-                        <div key={i} className="border rounded-lg p-4 animate-pulse">
-                          <div className="aspect-[3/4] bg-gray-200 rounded mb-3"></div>
-                          <div className="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
-                        </div>
-                      ))
-                    ) : (
-                      templates.map((template) => (
-                        <div 
-                          key={template.id} 
-                          className={`border rounded-lg overflow-hidden cursor-pointer transition-all hover:shadow-md ${
-                            currentTemplate?.id === template.id ? 'ring-2 ring-blue-500 shadow-md' : ''
-                          }`}
-                        >
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {isLoading ? (
+                        // Template loading skeletons
+                        Array(3).fill(0).map((_, i) => (
+                          <div key={i} className="border rounded-lg p-4 animate-pulse">
+                            <div className="aspect-[3/4] bg-gray-200 rounded mb-3"></div>
+                            <div className="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
+                          </div>
+                        ))
+                      ) : (
+                        templates.map((template) => (
                           <div 
-                            className="aspect-[3/4] relative"
-                            style={{
-                              backgroundColor: template.tableColor || '#f8f8f8',
-                              borderColor: template.primaryColor
-                            }}
+                            key={template.id} 
+                            className="border rounded-lg overflow-hidden cursor-pointer transition-all hover:shadow-md"
                             onClick={() => handleEditTemplate(template)}
                           >
-                            {/* Template preview */}
-                            <div className="absolute inset-0 p-4">
-                              <div className="h-8 bg-white rounded-md mb-2 flex items-center justify-center text-xs font-medium">
-                                {template.name}
-                              </div>
-                              <div 
-                                className="h-4 mb-2 rounded" 
-                                style={{ backgroundColor: `${template.primaryColor}40` }}
-                              ></div>
-                              <div 
-                                className="h-4 mb-6 rounded" 
-                                style={{ backgroundColor: `${template.primaryColor}20` }}
-                              ></div>
-                              <div className="h-20 bg-white rounded-md mb-2"></div>
-                              <div 
-                                className="h-12 rounded mt-4" 
-                                style={{ backgroundColor: `${template.secondaryColor}30` }}
-                              ></div>
-                            </div>
-                            
-                            {/* Actions overlay */}
-                            <div className="absolute inset-0 bg-black/0 opacity-0 hover:opacity-100 hover:bg-black/20 transition-all flex items-center justify-center gap-2">
-                              <Button 
-                                variant="secondary" 
-                                size="sm" 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditTemplate(template);
-                                }}
-                              >
-                                Edit
-                              </Button>
-                              <Button 
-                                variant="destructive" 
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleConfirmDeleteTemplate(template.id);
-                                }}
-                              >
-                                Delete
-                              </Button>
-                            </div>
-                          </div>
-                          
-                          <div className="p-3 border-t bg-white">
-                            <p className="font-medium text-center truncate">{template.name}</p>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
-                
-                {(editingTemplate || templateName) && (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>
-                          {editingTemplate ? `Edit Template: ${editingTemplate.name}` : 'Create New Template'}
-                        </CardTitle>
-                        <CardDescription>
-                          Configure your template settings
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          <div>
-                            <Label htmlFor="templateName">Template Name</Label>
-                            <Input
-                              id="templateName"
-                              value={templateName}
-                              onChange={(e) => setTemplateName(e.target.value)}
-                              className="mt-1"
-                            />
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <Label htmlFor="primaryColor">Primary Color</Label>
-                              <div className="flex mt-1 space-x-2">
-                                <Input
-                                  id="primaryColor"
-                                  type="color"
-                                  value={primaryColor}
-                                  onChange={(e) => setPrimaryColor(e.target.value)}
-                                  className="w-12 h-10 p-1"
-                                />
-                                <Input
-                                  value={primaryColor}
-                                  onChange={(e) => setPrimaryColor(e.target.value)}
-                                />
-                              </div>
-                            </div>
-                            <div>
-                              <Label htmlFor="secondaryColor">Secondary Color</Label>
-                              <div className="flex mt-1 space-x-2">
-                                <Input
-                                  id="secondaryColor"
-                                  type="color"
-                                  value={secondaryColor}
-                                  onChange={(e) => setSecondaryColor(e.target.value)}
-                                  className="w-12 h-10 p-1"
-                                />
-                                <Input
-                                  value={secondaryColor}
-                                  onChange={(e) => setSecondaryColor(e.target.value)}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <Label htmlFor="tableColor">Table Background Color</Label>
-                            <div className="flex mt-1 space-x-2">
-                              <Input
-                                id="tableColor"
-                                type="color"
-                                value={tableColor}
-                                onChange={(e) => setTableColor(e.target.value)}
-                                className="w-12 h-10 p-1"
-                              />
-                              <Input
-                                value={tableColor}
-                                onChange={(e) => setTableColor(e.target.value)}
-                              />
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <Label className="block mb-2">Header Position</Label>
-                            <RadioGroup 
-                              value={headerPosition} 
-                              onValueChange={(value) => setHeaderPosition(value as 'left' | 'center' | 'right')}
-                              className="flex gap-4"
-                            >
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="left" id="left" />
-                                <Label htmlFor="left">Left</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="center" id="center" />
-                                <Label htmlFor="center">Center</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="right" id="right" />
-                                <Label htmlFor="right">Right</Label>
-                              </div>
-                            </RadioGroup>
-                          </div>
-                          
-                          <div>
-                            <Label className="block mb-2">Footer Design</Label>
-                            <RadioGroup 
-                              value={footerDesign} 
-                              onValueChange={(value) => setFooterDesign(value as 'simple' | 'detailed' | 'minimal')}
-                              className="flex flex-col gap-2"
-                            >
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="simple" id="simple" />
-                                <Label htmlFor="simple">Simple</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="detailed" id="detailed" />
-                                <Label htmlFor="detailed">Detailed</Label>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <RadioGroupItem value="minimal" id="minimal" />
-                                <Label htmlFor="minimal">Minimal</Label>
-                              </div>
-                            </RadioGroup>
-                          </div>
-                          
-                          <div className="space-y-3 pt-2">
-                            <div className="flex items-center space-x-2">
-                              <Switch
-                                id="showGst"
-                                checked={showGst}
-                                onCheckedChange={setShowGst}
-                              />
-                              <Label htmlFor="showGst">Show GST by default</Label>
-                            </div>
-                            
-                            <div className="flex items-center space-x-2">
-                              <Switch
-                                id="showContact"
-                                checked={showContact}
-                                onCheckedChange={setShowContact}
-                              />
-                              <Label htmlFor="showContact">Show contact information</Label>
-                            </div>
-                            
-                            <div className="flex items-center space-x-2">
-                              <Switch
-                                id="showLogo"
-                                checked={showLogo}
-                                onCheckedChange={setShowLogo}
-                              />
-                              <Label htmlFor="showLogo">Show logo</Label>
-                            </div>
-                          </div>
-                          
-                          <div className="flex justify-end space-x-2 pt-4">
-                            <Button 
-                              variant="outline" 
-                              onClick={() => {
-                                setEditingTemplate(null);
-                                setTemplateName('');
+                            <div 
+                              className="aspect-[3/4] relative p-4"
+                              style={{
+                                backgroundColor: template.tableColor || '#f8f8f8',
                               }}
                             >
-                              Cancel
-                            </Button>
-                            <Button 
-                              onClick={handleSaveTemplate}
-                              disabled={isLoading}
-                              className="flex items-center gap-2"
-                            >
-                              {isLoading ? (
-                                <>Loading...</>
-                              ) : (
-                                <>
-                                  <CheckCircle className="h-4 w-4" />
-                                  {editingTemplate ? 'Update Template' : 'Create Template'}
-                                </>
-                              )}
-                            </Button>
+                              {/* Template preview */}
+                              <div className="absolute inset-0 p-4">
+                                <div 
+                                  className="h-6 mb-2 rounded" 
+                                  style={{ backgroundColor: template.primaryColor + '40' }}
+                                ></div>
+                                <div 
+                                  className="h-4 mb-2 rounded" 
+                                  style={{ backgroundColor: template.primaryColor + '20' }}
+                                ></div>
+                                <div className="h-16 bg-white rounded-md my-2"></div>
+                                <div className="grid grid-cols-5 gap-1 my-2">
+                                  <div className="col-span-1 h-3 bg-white rounded"></div>
+                                  <div className="col-span-2 h-3 bg-white rounded"></div>
+                                  <div className="col-span-1 h-3 bg-white rounded"></div>
+                                  <div className="col-span-1 h-3 bg-white rounded"></div>
+                                </div>
+                                <div className="grid grid-cols-5 gap-1 mb-2">
+                                  <div className="col-span-1 h-3 bg-white rounded"></div>
+                                  <div className="col-span-2 h-3 bg-white rounded"></div>
+                                  <div className="col-span-1 h-3 bg-white rounded"></div>
+                                  <div className="col-span-1 h-3 bg-white rounded"></div>
+                                </div>
+                                <div 
+                                  className="h-8 rounded mt-4" 
+                                  style={{ backgroundColor: template.secondaryColor + '30' }}
+                                ></div>
+                              </div>
+                              
+                              {/* Template name overlay */}
+                              <div className="absolute top-2 left-2 right-2">
+                                <div className="bg-white/90 py-1 px-2 text-center rounded-md text-xs font-medium truncate">
+                                  {template.name}
+                                </div>
+                              </div>
+                              
+                              {/* Actions overlay */}
+                              <div className="absolute inset-0 bg-black/0 opacity-0 hover:opacity-100 hover:bg-black/20 transition-all flex items-center justify-center gap-2">
+                                <Button 
+                                  variant="secondary" 
+                                  size="sm" 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditTemplate(template);
+                                  }}
+                                >
+                                  Edit
+                                </Button>
+                                <Button 
+                                  variant="destructive" 
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleConfirmDeleteTemplate(template.id);
+                                  }}
+                                >
+                                  <Trash className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                            
+                            <div className="p-3 border-t bg-white">
+                              <p className="font-medium text-center truncate">{template.name}</p>
+                            </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Template Preview</CardTitle>
-                        <CardDescription>See how your invoice will look with these settings</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="border rounded-lg overflow-hidden">
-                          <TemplatePreview 
-                            invoice={previewInvoice}
-                            template={{
-                              primaryColor,
-                              secondaryColor,
-                              tableColor,
-                              headerPosition,
-                              footerDesign,
-                              showGst,
-                              showContact,
-                              showLogo
-                            }}
-                          />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Theme Settings</CardTitle>
-                <CardDescription>
-                  Choose the theme for your dashboard
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {themes.map((theme) => (
-                    <div
-                      key={theme.id}
-                      className={`border rounded-lg p-2 cursor-pointer transition-all ${
-                        currentTheme === theme.id ? 'ring-2 ring-blue-500' : 'hover:border-blue-300'
-                      }`}
-                      onClick={() => handleThemeChange(theme.id)}
-                    >
-                      <div 
-                        className={`h-20 rounded-md mb-2`}
-                        style={{ 
-                          backgroundColor: theme.colors.background,
-                          border: `1px solid ${theme.colors.border}`
-                        }}
-                      >
-                        <div className="flex p-2 gap-1 justify-end">
-                          <div 
-                            className="h-3 w-3 rounded-full" 
-                            style={{ backgroundColor: theme.colors.primary }}
-                          ></div>
-                          <div 
-                            className="h-3 w-3 rounded-full" 
-                            style={{ backgroundColor: theme.colors.secondary }}
-                          ></div>
-                        </div>
-                      </div>
-                      <p 
-                        className="text-xs font-medium text-center"
-                        style={{ color: theme.mode === 'dark' ? '#fff' : '#000' }}
-                      >
-                        {theme.name}
-                      </p>
+                        ))
+                      )}
                     </div>
-                  ))}
-                </div>
+                    
+                    {editingTemplate && (
+                      <div className="mt-8">
+                        <TemplateCreator 
+                          initialTemplate={editingTemplate.id ? editingTemplate : undefined}
+                          onSave={handleSaveTemplate}
+                          onCancel={handleCancelTemplateEdit}
+                          isLoading={isLoading}
+                          previewInvoice={previewInvoice}
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
         </TabsContent>
         
-        <TabsContent value="business">
-          <div className="grid gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Business Information</CardTitle>
-                <CardDescription>
-                  These details will appear on your invoices
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form className="grid gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="businessName">Business Name</Label>
-                    <Input
-                      id="businessName"
-                      value={businessName}
-                      onChange={(e) => setBusinessName(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="address">Address</Label>
-                    <Input
-                      id="address"
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="gstNumber">GST Number</Label>
-                      <Input
-                        id="gstNumber"
-                        value={gstNumber}
-                        onChange={(e) => setGstNumber(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="phoneNumber">Phone Number</Label>
-                      <Input
-                        id="phoneNumber"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex justify-end">
-                    <Button onClick={handleSaveBusinessInfo}>Save Changes</Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Business Logo</CardTitle>
-                <CardDescription>
-                  Upload your business logo to appear on invoices
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-8 mb-4">
-                  <div className="text-center">
-                    <p className="text-sm text-gray-500 mb-2">PNG, JPG up to 5MB</p>
-                    <Button onClick={handleUploadLogo}>Upload Logo</Button>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-500 text-center">
-                  Logo uploading requires Supabase integration
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+        <TabsContent value="profile">
+          <ProfileSettings
+            businessName={businessName}
+            address={address}
+            gstNumber={gstNumber}
+            phoneNumber={phoneNumber}
+            onSaveBusinessInfo={handleSaveBusinessInfo}
+            onUploadLogo={handleUploadLogo}
+          />
         </TabsContent>
       </Tabs>
       

@@ -7,6 +7,7 @@ import { fetchTemplates, Template } from '@/services/templateService';
 import { useToast } from '@/hooks/use-toast';
 import { FileText, Settings } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { getCurrentUserId } from '@/utils/supabaseClient';
 
 const CreateInvoicePage = () => {
   const navigate = useNavigate();
@@ -18,6 +19,30 @@ const CreateInvoicePage = () => {
     const loadTemplates = async () => {
       try {
         setIsLoading(true);
+        
+        // Check if user is authenticated
+        const userId = getCurrentUserId();
+        if (!userId) {
+          console.warn('No authenticated user found');
+          // Use default template if not authenticated
+          setTemplates([{
+            id: 'default',
+            name: 'Default Template',
+            primary_color: '#3B82F6',
+            secondary_color: '#64748B',
+            font_size_header: 'text-3xl',
+            font_size_body: 'text-base',
+            font_size_footer: 'text-sm',
+            show_gst: true,
+            show_contact: true,
+            show_logo: true,
+            header_position: 'center',
+            table_color: '#f8f9fa',
+            footer_design: 'simple'
+          }]);
+          return;
+        }
+        
         const data = await fetchTemplates();
         if (data && data.length > 0) {
           // Transform received data to ensure template properties have the correct types
