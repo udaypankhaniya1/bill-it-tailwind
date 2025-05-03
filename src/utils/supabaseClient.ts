@@ -1,10 +1,17 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
+// Mock user for development purposes
+export const mockUser = {
+  id: 'mock-user-id',
+  email: 'user@example.com',
+  name: 'Demo User'
+};
+
 // Get the current user's ID from Supabase
-export const getCurrentUserId = (): string | null => {
-  const session = supabase.auth.getSession();
-  return session?.data?.session?.user?.id || null;
+export const getCurrentUserId = async (): Promise<string | null> => {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.user?.id || null;
 };
 
 // Sign up a new user
