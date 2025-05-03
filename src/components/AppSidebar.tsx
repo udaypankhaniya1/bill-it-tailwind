@@ -1,11 +1,20 @@
 
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Home, FileText, Plus, Settings, LogOut, User, Menu } from 'lucide-react';
+import { Home, FileText, Plus, Settings, LogOut, Menu } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useDispatch } from 'react-redux';
 import { logout } from '@/redux/slices/authSlice';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar
+} from '@/components/ui/sidebar';
 
 type SidebarItem = {
   title: string;
@@ -70,81 +79,100 @@ export const AppSidebar = ({ isMobile, isSidebarOpen, onSidebarToggle }: AppSide
     return location.pathname === path;
   };
 
-  // Sidebar content
-  const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-sidebar p-4">
-      <div className="flex items-center mb-6 gap-3">
-        <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
-          <FileText className="h-5 w-5 text-primary-foreground" />
-        </div>
-        <div className={cn("transition-opacity duration-200", isSidebarOpen ? "opacity-100" : "opacity-0 lg:group-hover:opacity-100")}>
-          <h2 className="text-lg font-bold">InvoiceMaster</h2>
-          <p className="text-xs text-muted-foreground">Professional Invoices</p>
-        </div>
-      </div>
-      
-      <div className="flex flex-col flex-1 gap-2">
-        {sidebarItems.map((item, index) => (
-          <div key={index}>
-            {item.path ? (
-              <NavLink
-                to={item.path}
-                className={({ isActive }) => cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer transition-colors",
-                  isActive 
-                    ? "bg-primary/10 text-primary" 
-                    : "hover:bg-sidebar-accent"
-                )}
-              >
-                <div>{item.icon}</div>
-                <span className={cn(
-                  "font-medium text-sm transition-opacity duration-200",
-                  isSidebarOpen ? "opacity-100" : "opacity-0 lg:group-hover:opacity-100"
-                )}>
-                  {item.title}
-                </span>
-              </NavLink>
-            ) : (
-              <div
-                onClick={item.onClick}
-                className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-sidebar-accent transition-colors"
-              >
-                <div>{item.icon}</div>
-                <span className={cn(
-                  "font-medium text-sm transition-opacity duration-200",
-                  isSidebarOpen ? "opacity-100" : "opacity-0 lg:group-hover:opacity-100"
-                )}>
-                  {item.title}
-                </span>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  // Desktop sidebar
-  if (!isMobile) {
+  // Mobile sidebar (sheet)
+  if (isMobile) {
     return (
-      <div
-        className={cn(
-          "fixed left-0 top-0 h-full bg-sidebar border-r border-sidebar-border transition-all duration-300",
-          isSidebarOpen ? "w-64" : "w-16"
-        )}
-      >
-        <SidebarContent />
-      </div>
+      <Sheet open={isSidebarOpen} onOpenChange={onSidebarToggle}>
+        <SheetContent side="left" className="p-0 w-[280px] bg-sidebar border-sidebar-border">
+          <div className="flex flex-col h-full bg-sidebar p-4">
+            <div className="flex items-center mb-6 gap-3">
+              <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
+                <FileText className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold">InvoiceMaster</h2>
+                <p className="text-xs text-muted-foreground">Professional Invoices</p>
+              </div>
+            </div>
+            
+            <div className="flex flex-col flex-1 gap-2">
+              {sidebarItems.map((item, index) => (
+                <div key={index}>
+                  {item.path ? (
+                    <NavLink
+                      to={item.path}
+                      className={({ isActive }) => cn(
+                        "flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer transition-colors",
+                        isActive 
+                          ? "bg-primary/10 text-primary" 
+                          : "hover:bg-sidebar-accent"
+                      )}
+                    >
+                      <div>{item.icon}</div>
+                      <span className="font-medium text-sm">
+                        {item.title}
+                      </span>
+                    </NavLink>
+                  ) : (
+                    <div
+                      onClick={item.onClick}
+                      className="flex items-center gap-3 px-3 py-2 rounded-md cursor-pointer hover:bg-sidebar-accent transition-colors"
+                    >
+                      <div>{item.icon}</div>
+                      <span className="font-medium text-sm">
+                        {item.title}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     );
   }
 
-  // Mobile sidebar (sheet)
+  // Desktop sidebar
   return (
-    <Sheet open={isSidebarOpen} onOpenChange={onSidebarToggle}>
-      <SheetContent side="left" className="p-0 w-[280px] bg-sidebar border-sidebar-border">
-        <SidebarContent />
-      </SheetContent>
-    </Sheet>
+    <Sidebar>
+      <SidebarHeader>
+        <div className="flex items-center gap-3 px-2">
+          <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
+            <FileText className="h-5 w-5 text-primary-foreground" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold">InvoiceMaster</h2>
+            <p className="text-xs text-muted-foreground">Professional Invoices</p>
+          </div>
+        </div>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarMenu>
+          {sidebarItems.map((item, index) => (
+            <SidebarMenuItem key={index}>
+              {item.path ? (
+                <SidebarMenuButton 
+                  asChild 
+                  isActive={isActive(item.path)}
+                  tooltip={item.title}
+                >
+                  <NavLink to={item.path}>
+                    {item.icon}
+                    <span>{item.title}</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              ) : (
+                <SidebarMenuButton onClick={item.onClick} tooltip={item.title}>
+                  {item.icon}
+                  <span>{item.title}</span>
+                </SidebarMenuButton>
+              )}
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarContent>
+    </Sidebar>
   );
 };
 
