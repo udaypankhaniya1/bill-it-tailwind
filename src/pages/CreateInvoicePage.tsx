@@ -34,14 +34,14 @@ const CreateInvoicePage = () => {
   }, [toast]);
   
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-3xl font-bold">Create Invoice</h2>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={() => navigate('/invoices')}>
+    <div className="w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+        <h2 className="text-2xl md:text-3xl font-bold">Create Invoice</h2>
+        <div className="flex flex-wrap gap-3">
+          <Button variant="outline" size="sm" onClick={() => navigate('/invoices')}>
             View All Invoices
           </Button>
-          <Button variant="outline" onClick={() => navigate('/settings')}>
+          <Button variant="outline" size="sm" onClick={() => navigate('/settings')}>
             Manage Templates
           </Button>
         </div>
