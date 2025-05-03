@@ -1,11 +1,14 @@
 
-import { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { useState, useEffect, ReactNode } from 'react';
 import { NewSidebar } from './NewSidebar';
 import TopBar from './TopBar';
 import { useMediaQuery } from '@/hooks/use-media-query';
 
-const ProtectedRoute = () => {
+interface ProtectedRouteProps {
+  children: ReactNode;
+}
+
+const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const isMobile = useMediaQuery("(max-width: 768px)");
   
@@ -32,7 +35,7 @@ const ProtectedRoute = () => {
       <div className="flex-1 flex flex-col">
         <TopBar onMenuClick={toggleSidebar} isSidebarOpen={isSidebarOpen} />
         <main className="flex-1 p-4 md:p-6 overflow-auto">
-          <Outlet />
+          {children}
         </main>
       </div>
     </div>
