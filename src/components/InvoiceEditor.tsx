@@ -12,10 +12,11 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash, GripVertical } from "lucide-react";
+import { Plus, Trash, GripVertical, Languages } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/hooks/use-toast";
 import { formatNumber } from "@/utils/formatNumber";
+import { toGujaratiNumber, toGujaratiCurrency, gujaratiTerms } from "@/utils/gujaratiConverter";
 import { 
   Select,
   SelectContent,
@@ -25,12 +26,14 @@ import {
 } from "@/components/ui/select";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { useNavigate } from "react-router-dom";
-import { createInvoice, InvoiceItem as DbInvoiceItem } from "@/services/invoiceService";
+import { createInvoice } from "@/services/invoiceService";
 import { Template } from "@/services/templateService";
+import DescriptionField from "@/components/DescriptionField";
 
 interface InvoiceItem {
   id: string;
   description: string;
+  gujarati_description?: string;
   quantity: number;
   unit: string;
   rate: number;
@@ -58,7 +61,8 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
   }, [templates, currentTemplate]);
 
   // State for all invoice fields
-  const [showGst, setShowGst] = useState<boolean>(false); 
+  const [showGst, setShowGst] = useState<boolean>(false);
+  const [useGujarati, setUseGujarati] = useState<boolean>(false);
   const [invoiceNumber, setInvoiceNumber] = useState(`INV-${Date.now().toString().slice(-6)}`);
   const [partyName, setPartyName] = useState("Gulab Oil");
   const [invoiceDate, setInvoiceDate] = useState("2025-04-23");
@@ -69,6 +73,7 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
     {
       id: uuidv4(),
       description: "મેન ગેટ",
+      gujarati_description: "મેન ગેટ",
       quantity: 2,
       unit: "pcs",
       rate: 7000,
@@ -77,6 +82,7 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
     {
       id: uuidv4(),
       description: "Dom (sft)",
+      gujarati_description: "ડોમ (સ્ક્વેર ફૂટ)",
       quantity: 4950,
       unit: "sft",
       rate: 33.33,
@@ -118,6 +124,18 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
       updatedItems[index].total = updatedItems[index].quantity * updatedItems[index].rate;
     } else {
       updatedItems[index][field] = value as never;
+    }
+    
+    setItems(updatedItems);
+  };
+
+  // Update description with potential translation
+  const handleDescriptionChange = (index: number, description: string, translatedDescription?: string) => {
+    const updatedItems = [...items];
+    updatedItems[index].description = description;
+    
+    if (translatedDescription) {
+      updatedItems[index].gujarati_description = translatedDescription;
     }
     
     setItems(updatedItems);
@@ -212,7 +230,7 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center space-x-2">
           <Switch
             id="gst-switch"
@@ -223,6 +241,18 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
         </div>
         
         <div className="flex items-center gap-3">
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="gujarati-switch"
+              checked={useGujarati}
+              onCheckedChange={(checked: boolean) => setUseGujarati(checked)}
+            />
+            <Label htmlFor="gujarati-switch" className="flex items-center">
+              <Languages className="h-4 w-4 mr-1" />
+              {useGujarati ? "ગુજરાતી" : "Gujarati"}
+            </Label>
+          </div>
+          
           <Select
             value={currentTemplate?.id || "default"}
             onValueChange={handleTemplateChange}
@@ -240,7 +270,7 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
           </Select>
           
           <Button onClick={saveInvoice} disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : 'Save Invoice'}
+            {isSubmitting ? 'Saving...' : useGujarati ? 'સેવ કરો' : 'Save Invoice'}
           </Button>
         </div>
       </div>
@@ -254,7 +284,9 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
       >
         <div className="flex justify-between items-start mb-4">
           <div>
-            <h1 className={`text-3xl font-bold mb-2 ${currentTemplate?.font_size_header || 'text-3xl'}`}>Quotation</h1>
+            <h1 className={`text-3xl font-bold mb-2 ${currentTemplate?.font_size_header || 'text-3xl'}`}>
+              {useGujarati ? "કોટેશન" : "Quotation"}
+            </h1>
             <p className="font-semibold mb-1">Sharda Mandap Service</p>
             <p className="text-sm mb-1">Porbandar Baypass, Jalaram Nagar, Mangrol, Dist. Junagadh - 362225</p>
             <p className="text-sm mb-4">
@@ -272,11 +304,13 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
         
         <hr className="my-4" />
         
-        <h2 className="text-xl font-semibold mb-2">Invoice Details</h2>
+        <h2 className="text-xl font-semibold mb-2">{useGujarati ? "બિલ વિગતો" : "Invoice Details"}</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <Label htmlFor="invoice-number" className="block mb-1">Invoice No:</Label>
+            <Label htmlFor="invoice-number" className="block mb-1">
+              {useGujarati ? "બિલ નંબર:" : "Invoice No:"}
+            </Label>
             <Input 
               id="invoice-number"
               value={invoiceNumber} 
@@ -286,7 +320,9 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
             />
           </div>
           <div>
-            <Label htmlFor="party-name" className="block mb-1">Party Name:</Label>
+            <Label htmlFor="party-name" className="block mb-1">
+              {useGujarati ? "પાર્ટી નામ:" : "Party Name:"}
+            </Label>
             <Input 
               id="party-name"
               value={partyName} 
@@ -295,7 +331,9 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
             />
           </div>
           <div>
-            <Label htmlFor="invoice-date" className="block mb-1">Date:</Label>
+            <Label htmlFor="invoice-date" className="block mb-1">
+              {useGujarati ? "તારીખ:" : "Date:"}
+            </Label>
             <Input 
               id="invoice-date"
               type="date"
@@ -309,10 +347,12 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
         <hr className="my-4" />
         
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Billing Details</h2>
+          <h2 className="text-xl font-semibold">
+            {useGujarati ? "બિલિંગ વિગતો" : "Billing Details"}
+          </h2>
           <Button variant="outline" size="sm" onClick={addNewItem}>
             <Plus className="h-4 w-4 mr-2" />
-            Add Item
+            {useGujarati ? "આઇટમ ઉમેરો" : "Add Item"}
           </Button>
         </div>
         
@@ -322,12 +362,22 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[30px]"></TableHead>
-                  <TableHead>Sr No</TableHead>
-                  <TableHead>Description (વર્ણન)</TableHead>
-                  <TableHead>Quantity (જથ્થો)</TableHead>
-                  <TableHead>Unit</TableHead>
-                  <TableHead>Rate (₹)</TableHead>
-                  <TableHead>Total (₹)</TableHead>
+                  <TableHead>{useGujarati ? "ક્રમ" : "Sr No"}</TableHead>
+                  <TableHead>
+                    {useGujarati ? gujaratiTerms.description : "Description"} {useGujarati ? "" : "(વર્ણન)"}
+                  </TableHead>
+                  <TableHead>
+                    {useGujarati ? gujaratiTerms.quantity : "Quantity"} {useGujarati ? "" : "(જથ્થો)"}
+                  </TableHead>
+                  <TableHead>
+                    {useGujarati ? gujaratiTerms.unit : "Unit"}
+                  </TableHead>
+                  <TableHead>
+                    {useGujarati ? gujaratiTerms.rate : "Rate"} {useGujarati ? "" : "(₹)"}
+                  </TableHead>
+                  <TableHead>
+                    {useGujarati ? gujaratiTerms.total : "Total"} {useGujarati ? "" : "(₹)"}
+                  </TableHead>
                   <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -349,11 +399,14 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
                                 <GripVertical className="h-4 w-4 text-gray-400" />
                               </div>
                             </TableCell>
-                            <TableCell>{index + 1}</TableCell>
                             <TableCell>
-                              <Input
+                              {useGujarati ? toGujaratiNumber(index + 1) : (index + 1)}
+                            </TableCell>
+                            <TableCell>
+                              <DescriptionField
                                 value={item.description}
-                                onChange={(e) => handleItemChange(index, 'description', e.target.value)}
+                                onChange={(value, translatedValue) => handleDescriptionChange(index, value, translatedValue)}
+                                useGujarati={useGujarati}
                                 className="w-full"
                               />
                             </TableCell>
@@ -381,7 +434,9 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
                                 className="w-full"
                               />
                             </TableCell>
-                            <TableCell>{formatNumber(item.total)}</TableCell>
+                            <TableCell>
+                              {useGujarati ? toGujaratiCurrency(item.total) : formatNumber(item.total)}
+                            </TableCell>
                             <TableCell>
                               <Button
                                 variant="ghost"
@@ -406,29 +461,37 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
 
         <hr className="my-4" />
         
-        <h2 className="text-xl font-semibold mb-4">Summary</h2>
+        <h2 className="text-xl font-semibold mb-4">
+          {useGujarati ? "સારાંશ" : "Summary"}
+        </h2>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Description</TableHead>
-                <TableHead>Amount (₹)</TableHead>
+                <TableHead>{useGujarati ? "વિગત" : "Description"}</TableHead>
+                <TableHead>{useGujarati ? "રકમ (₹)" : "Amount (₹)"}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               <TableRow>
-                <TableCell>Total without GST</TableCell>
-                <TableCell>{formatNumber(subtotal)}</TableCell>
+                <TableCell>{useGujarati ? "જીએસટી વગરની રકમ" : "Total without GST"}</TableCell>
+                <TableCell>{useGujarati ? toGujaratiCurrency(subtotal) : formatNumber(subtotal)}</TableCell>
               </TableRow>
               {showGst && (
                 <TableRow>
-                  <TableCell>GST (18%)</TableCell>
-                  <TableCell>{formatNumber(gst)}</TableCell>
+                  <TableCell>{useGujarati ? "જીએસટી (18%)" : "GST (18%)"}</TableCell>
+                  <TableCell>{useGujarati ? toGujaratiCurrency(gst) : formatNumber(gst)}</TableCell>
                 </TableRow>
               )}
               <TableRow>
-                <TableCell className="font-bold">{showGst ? 'Amount with GST' : 'Total Amount'}</TableCell>
-                <TableCell className="font-bold">{formatNumber(total)}</TableCell>
+                <TableCell className="font-bold">
+                  {useGujarati 
+                    ? (showGst ? "જીએસટી સાથેની રકમ" : "કુલ રકમ") 
+                    : (showGst ? 'Amount with GST' : 'Total Amount')}
+                </TableCell>
+                <TableCell className="font-bold">
+                  {useGujarati ? toGujaratiCurrency(total) : formatNumber(total)}
+                </TableCell>
               </TableRow>
             </TableBody>
           </Table>
@@ -437,9 +500,13 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
         <hr className="my-4" />
         
         <div className="mt-6" style={{color: `var(--secondary-color)`}}>
-          <p className="text-center text-sm">Generated by Sharda Mandap Service</p>
+          <p className="text-center text-sm">{useGujarati ? "શારદા મંડપ સર્વિસ દ્વારા નિર્મિત" : "Generated by Sharda Mandap Service"}</p>
           {currentTemplate?.show_contact && (
-            <p className="text-center text-sm">For inquiries, contact us at <span className="font-semibold">98246 86047</span></p>
+            <p className="text-center text-sm">
+              {useGujarati 
+                ? "પૂછપરછ માટે, અમારો સંપર્ક કરો" 
+                : "For inquiries, contact us at"} <span className="font-semibold">98246 86047</span>
+            </p>
           )}
         </div>
       </div>

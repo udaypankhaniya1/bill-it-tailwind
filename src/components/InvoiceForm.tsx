@@ -9,7 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { formatNumber, parseFormattedNumber, calculateGST } from '@/utils/formatNumber';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, ArrowRight, FileText, Trash } from 'lucide-react';
+import { Plus, ArrowRight, FileText, Trash, Languages } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import DescriptionField from '@/components/DescriptionField';
+import { toGujaratiNumber, toGujaratiCurrency, gujaratiTerms } from '@/utils/gujaratiConverter';
 
 const InvoiceForm = () => {
   const dispatch = useDispatch();
@@ -17,6 +20,7 @@ const InvoiceForm = () => {
   const [partyName, setPartyName] = useState('');
   const [date, setDate] = useState('');
   const [showPreview, setShowPreview] = useState(false);
+  const [useGujarati, setUseGujarati] = useState(false);
   const [items, setItems] = useState<InvoiceItem[]>([
     {
       id: uuidv4(),
@@ -48,6 +52,12 @@ const InvoiceForm = () => {
       updatedItems[index][field] = value as never;
     }
     
+    setItems(updatedItems);
+  };
+
+  const handleDescriptionChange = (index: number, description: string, translatedDescription?: string) => {
+    const updatedItems = [...items];
+    updatedItems[index].description = description;
     setItems(updatedItems);
   };
 
@@ -135,26 +145,37 @@ const InvoiceForm = () => {
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Create Invoice</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>{useGujarati ? "બિલ બનાવો" : "Create Invoice"}</CardTitle>
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="gujarati-switch"
+            checked={useGujarati}
+            onCheckedChange={(checked: boolean) => setUseGujarati(checked)}
+          />
+          <Label htmlFor="gujarati-switch" className="flex items-center">
+            <Languages className="h-4 w-4 mr-1" />
+            {useGujarati ? "ગુજરાતી" : "Gujarati"}
+          </Label>
+        </div>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-6">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="partyName">Party Name</Label>
+                <Label htmlFor="partyName">{useGujarati ? gujaratiTerms.party + " નામ" : "Party Name"}</Label>
                 <Input
                   id="partyName"
                   value={partyName}
                   onChange={(e) => setPartyName(e.target.value)}
-                  placeholder="Customer/Client Name"
+                  placeholder={useGujarati ? "ગ્રાહક/ક્લાયન્ટનું નામ" : "Customer/Client Name"}
                   required
                   disabled={showPreview}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="date">Date</Label>
+                <Label htmlFor="date">{useGujarati ? gujaratiTerms.date : "Date"}</Label>
                 <Input
                   id="date"
                   type="date"
@@ -168,11 +189,11 @@ const InvoiceForm = () => {
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium">Items</h3>
+                <h3 className="text-lg font-medium">{useGujarati ? "આઇટમ્સ" : "Items"}</h3>
                 {!showPreview && (
                   <Button type="button" variant="outline" size="sm" onClick={addNewItem}>
                     <Plus className="h-4 w-4 mr-2" />
-                    Add Item
+                    {useGujarati ? "આઇટમ ઉમેરો" : "Add Item"}
                   </Button>
                 )}
               </div>
@@ -181,35 +202,34 @@ const InvoiceForm = () => {
                 <table className="invoice-table">
                   <thead>
                     <tr>
-                      <th>Sr No</th>
-                      <th>Description</th>
-                      <th>Quantity</th>
-                      <th>Unit</th>
-                      <th>Rate (₹)</th>
-                      <th>Total (₹)</th>
+                      <th>{useGujarati ? "ક્રમ" : "Sr No"}</th>
+                      <th>{useGujarati ? gujaratiTerms.description : "Description"}</th>
+                      <th>{useGujarati ? gujaratiTerms.quantity : "Quantity"}</th>
+                      <th>{useGujarati ? gujaratiTerms.unit : "Unit"}</th>
+                      <th>{useGujarati ? gujaratiTerms.rate + " (₹)" : "Rate (₹)"}</th>
+                      <th>{useGujarati ? gujaratiTerms.total + " (₹)" : "Total (₹)"}</th>
                       {!showPreview && <th></th>}
                     </tr>
                   </thead>
                   <tbody>
                     {items.map((item, index) => (
                       <tr key={item.id}>
-                        <td>{index + 1}</td>
+                        <td>{useGujarati ? toGujaratiNumber(index + 1) : (index + 1)}</td>
                         <td>
                           {showPreview ? (
                             item.description
                           ) : (
-                            <Input
+                            <DescriptionField
                               value={item.description}
-                              onChange={(e) => handleItemChange(index, 'description', e.target.value)}
-                              placeholder="Item description"
+                              onChange={(value, translatedValue) => handleDescriptionChange(index, value, translatedValue)}
+                              useGujarati={useGujarati}
                               className="border-0 bg-transparent p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-                              required
                             />
                           )}
                         </td>
                         <td>
                           {showPreview ? (
-                            item.quantity
+                            useGujarati ? toGujaratiNumber(item.quantity) : item.quantity
                           ) : (
                             <Input
                               type="number"
@@ -235,7 +255,7 @@ const InvoiceForm = () => {
                         </td>
                         <td>
                           {showPreview ? (
-                            formatNumber(item.rate)
+                            useGujarati ? toGujaratiCurrency(item.rate) : formatNumber(item.rate)
                           ) : (
                             <Input
                               type="number"
@@ -247,7 +267,7 @@ const InvoiceForm = () => {
                             />
                           )}
                         </td>
-                        <td>{formatNumber(item.total)}</td>
+                        <td>{useGujarati ? toGujaratiCurrency(item.total) : formatNumber(item.total)}</td>
                         {!showPreview && (
                           <td>
                             <Button
@@ -269,16 +289,22 @@ const InvoiceForm = () => {
 
               <div className="flex flex-col gap-2 items-end">
                 <div className="flex justify-between w-full max-w-xs">
-                  <span className="font-medium">Subtotal:</span>
-                  <span>₹ {formatNumber(subtotal)}</span>
+                  <span className="font-medium">{useGujarati ? gujaratiTerms.subtotal + ":" : "Subtotal:"}</span>
+                  <span>
+                    {useGujarati ? toGujaratiCurrency(subtotal) : "₹ " + formatNumber(subtotal)}
+                  </span>
                 </div>
                 <div className="flex justify-between w-full max-w-xs">
-                  <span className="font-medium">GST (18%):</span>
-                  <span>₹ {formatNumber(gst)}</span>
+                  <span className="font-medium">{useGujarati ? gujaratiTerms.gst + " (18%):" : "GST (18%):"}</span>
+                  <span>
+                    {useGujarati ? toGujaratiCurrency(gst) : "₹ " + formatNumber(gst)}
+                  </span>
                 </div>
                 <div className="flex justify-between w-full max-w-xs border-t pt-2">
-                  <span className="font-bold">Total:</span>
-                  <span className="font-bold">₹ {formatNumber(total)}</span>
+                  <span className="font-bold">{useGujarati ? gujaratiTerms.total + ":" : "Total:"}</span>
+                  <span className="font-bold">
+                    {useGujarati ? toGujaratiCurrency(total) : "₹ " + formatNumber(total)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -288,16 +314,16 @@ const InvoiceForm = () => {
             {showPreview ? (
               <div className="flex gap-4">
                 <Button type="button" variant="outline" onClick={() => setShowPreview(false)}>
-                  Edit
+                  {useGujarati ? "સંપાદિત કરો" : "Edit"}
                 </Button>
                 <Button type="submit">
                   <FileText className="mr-2 h-4 w-4" />
-                  Save Invoice
+                  {useGujarati ? "બિલ સાચવો" : "Save Invoice"}
                 </Button>
               </div>
             ) : (
               <Button type="submit">
-                Preview
+                {useGujarati ? "પૂર્વાવલોકન" : "Preview"}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             )}

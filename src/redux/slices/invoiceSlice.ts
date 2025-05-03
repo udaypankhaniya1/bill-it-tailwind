@@ -4,6 +4,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 export interface InvoiceItem {
   id: string;
   description: string;
+  gujarati_description?: string; // Added support for Gujarati descriptions
   quantity: number;
   unit: string;
   rate: number;

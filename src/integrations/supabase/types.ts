@@ -92,6 +92,30 @@ export type Database = {
         }
         Relationships: []
       }
+      item_descriptions: {
+        Row: {
+          created_at: string
+          english_text: string
+          gujarati_text: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          english_text: string
+          gujarati_text: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          english_text?: string
+          gujarati_text?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       templates: {
         Row: {
           created_at: string
@@ -157,7 +181,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      translate_text: {
+        Args: { text_to_translate: string; target_language?: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
