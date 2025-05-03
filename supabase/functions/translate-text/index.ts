@@ -9,7 +9,7 @@ const corsHeaders = {
 
 interface TranslateRequest {
   text: string;
-  targetLanguage: string;
+  targetLanguage?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -25,8 +25,8 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Text is required");
     }
 
-    // In a real implementation, you'd call Google Translate or a similar service here
-    // For now, we're using a simple mapping for demonstration purposes
+    // Common translations for mandap rental items to Gujarati
+    // In production, you'd call Google Translate API or a similar service
     const translations: Record<string, string> = {
       "lagan mandap": "લગ્ન મંડપ",
       "dom": "ડોમ",
@@ -38,16 +38,35 @@ const handler = async (req: Request): Promise<Response> => {
       "sound system": "સાઉન્ડ સિસ્ટમ",
       "lighting": "લાઇટિંગ",
       "ac": "એસી",
+      "decoration": "સજાવટ",
+      "flower": "ફૂલ",
+      "carpet": "કાર્પેટ",
+      "sofa": "સોફા",
+      "speaker": "સ્પીકર",
+      "microphone": "માઇક્રોફોન",
+      "projector": "પ્રોજેક્ટર",
+      "screen": "સ્ક્રીન",
+      "generator": "જનરેટર",
     };
     
+    // Normalize and check for exact match
     const lowerText = text.toLowerCase();
     let translatedText = "";
     
     if (translations[lowerText]) {
       translatedText = translations[lowerText];
     } else {
-      // In a real implementation, call an actual translation API here
-      translatedText = `${text} (translated to Gujarati)`;
+      // Fallback to a simple approximation (in production, use a real translation API)
+      // This is just a placeholder - in a real system, you'd use Google Translate API
+      translatedText = `${text}`;
+      
+      // Try to find similar terms or partial matches
+      for (const [en, gu] of Object.entries(translations)) {
+        if (lowerText.includes(en)) {
+          translatedText = gu;
+          break;
+        }
+      }
     }
 
     return new Response(

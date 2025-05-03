@@ -16,7 +16,7 @@ export const toGujaratiCurrency = (num: number | string): string => {
   if (num === undefined || num === null) return '';
   
   const formattedNum = typeof num === 'number' ? num.toLocaleString('en-IN') : num;
-  return toGujaratiNumber(formattedNum);
+  return '₹ ' + toGujaratiNumber(formattedNum);
 };
 
 // Basic Gujarati translations for invoice-related terms
@@ -30,5 +30,12 @@ export const gujaratiTerms = {
   description: 'વર્ણન',
   date: 'તારીખ',
   invoice: 'બિલ',
-  party: 'પાર્ટી'
+  party: 'પાર્ટી',
+  items: 'આઇટમ્સ',
+  summary: 'સારાંશ',
+  preview: 'પૂર્વાવલોકન',
+  save: 'સાચવો',
+  edit: 'સંપાદિત કરો',
+  add: 'ઉમેરો',
+  remove: 'દૂર કરો'
 };

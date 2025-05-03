@@ -44,6 +44,9 @@ const DescriptionField = ({
   const [loading, setLoading] = useState(false);
   const [selectedDescription, setSelectedDescription] = useState<Description | null>(null);
   const { toast } = useToast();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const isBlurringRef = useRef(false);
   
   // Fetch matching descriptions based on search term
   useEffect(() => {
@@ -99,6 +102,25 @@ const DescriptionField = ({
     
     fetchExactMatch();
   }, [value]);
+
+  // Handle clicks outside the component
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        popoverRef.current && 
+        !popoverRef.current.contains(event.target as Node) &&
+        inputRef.current && 
+        !inputRef.current.contains(event.target as Node)
+      ) {
+        handleClosePopover();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
   
   // Save a new description to the database
   const saveNewDescription = async (english: string) => {
@@ -178,7 +200,7 @@ const DescriptionField = ({
     const inputValue = e.target.value;
     onChange(inputValue);
     setSearchTerm(inputValue);
-    setOpen(true);
+    if (!open) setOpen(true);
   };
   
   const handleSelect = (description: Description) => {
@@ -186,15 +208,56 @@ const DescriptionField = ({
     onChange(description.english_text, description.gujarati_text);
     setOpen(false);
   };
-  
-  const handleBlur = async () => {
-    // When user finishes typing, save the new description if it doesn't exist
+
+  const handleClosePopover = () => {
+    if (isBlurringRef.current) return;
+    
+    // When popover closes, save the new description if it doesn't exist
     if (value && !selectedDescription) {
-      await saveNewDescription(value);
+      saveNewDescription(value);
+    }
+    setOpen(false);
+  };
+
+  const handleInputFocus = () => {
+    if (value) {
+      setOpen(true);
+      setSearchTerm(value);
+    }
+  };
+
+  const handleInputBlur = (e: React.FocusEvent) => {
+    // Only close if not clicking on the popover content
+    if (popoverRef.current && popoverRef.current.contains(e.relatedTarget as Node)) {
+      // Don't close, user is interacting with popover
+      return;
     }
     
-    // Close the popover but with a delay to allow clicking on items
-    setTimeout(() => setOpen(false), 200);
+    // Use a small delay to allow clicks on the popover content
+    isBlurringRef.current = true;
+    setTimeout(() => {
+      isBlurringRef.current = false;
+      // Close unless we've refocused
+      if (document.activeElement !== inputRef.current) {
+        handleClosePopover();
+      }
+    }, 200);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Handle Enter key to save the description
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (value) {
+        saveNewDescription(value);
+        setOpen(false);
+      }
+    }
+    
+    // Close popover on Escape
+    if (e.key === 'Escape') {
+      setOpen(false);
+    }
   };
 
   return (
@@ -202,21 +265,34 @@ const DescriptionField = ({
       <PopoverTrigger asChild>
         <div className="relative w-full">
           <Input
+            ref={inputRef}
             value={useGujarati && selectedDescription?.gujarati_text ? selectedDescription.gujarati_text : value}
             onChange={handleInputChange}
-            onBlur={handleBlur}
-            onFocus={() => value && setOpen(true)}
+            onFocus={handleInputFocus}
+            onBlur={handleInputBlur}
+            onKeyDown={handleKeyDown}
             placeholder={useGujarati ? "વર્ણન દાખલ કરો" : "Enter description"}
             className={className}
           />
         </div>
       </PopoverTrigger>
-      <PopoverContent className="p-0 w-[300px]" align="start">
+      <PopoverContent 
+        ref={popoverRef}
+        className="p-0 w-[300px]" 
+        align="start"
+        onInteractOutside={(e) => {
+          // Prevent immediate closing when clicking elsewhere
+          if (!isBlurringRef.current) {
+            e.preventDefault();
+          }
+        }}
+      >
         <Command>
           <CommandInput 
             placeholder="Search descriptions..." 
             value={searchTerm} 
             onValueChange={setSearchTerm}
+            autoFocus
           />
           <CommandList>
             {loading ? (
