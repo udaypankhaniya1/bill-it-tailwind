@@ -1,6 +1,6 @@
 
 import { useState, useEffect, ReactNode } from 'react';
-import { NewSidebar } from './NewSidebar';
+import { AppSidebar } from './AppSidebar';
 import TopBar from './TopBar';
 import { useMediaQuery } from '@/hooks/use-media-query';
 
@@ -27,12 +27,15 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   return (
     <div className="flex min-h-screen w-full bg-gray-50 dark:bg-gray-950">
-      <NewSidebar 
+      {/* Sidebar */}
+      <AppSidebar 
         isMobile={isMobile} 
         isSidebarOpen={isSidebarOpen}
         onSidebarToggle={toggleSidebar}
       />
-      <div className="flex-1 flex flex-col">
+      
+      {/* Main content area */}
+      <div className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarOpen && !isMobile ? 'ml-64' : 'ml-0'}`}>
         <TopBar onMenuClick={toggleSidebar} isSidebarOpen={isSidebarOpen} />
         <main className="flex-1 p-4 md:p-6 overflow-auto">
           {children}
