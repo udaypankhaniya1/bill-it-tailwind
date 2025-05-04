@@ -70,7 +70,7 @@ const GeminiSettings = () => {
       <CardHeader>
         <CardTitle>Gemini AI Settings</CardTitle>
         <CardDescription>
-          Configure your Gemini AI integration
+          Configure your Gemini AI integration for text translation and enhancement
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -96,7 +96,7 @@ const GeminiSettings = () => {
             </Button>
           </div>
           <p className="text-sm text-muted-foreground mt-2">
-            Your API key is stored securely and used to access Gemini AI features.
+            Your API key is stored securely and used for translating descriptions and enhancing text.
             <a 
               href="https://ai.google.dev/tutorials/setup" 
               target="_blank" 

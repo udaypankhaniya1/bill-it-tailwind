@@ -28,6 +28,7 @@ import { Check, Edit } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { useAIText } from '@/hooks/use-ai-text';
 
 interface Description {
   id: string;
@@ -48,6 +49,8 @@ const DescriptionField = ({
   useGujarati = false,
   className 
 }: DescriptionFieldProps) => {
+  const { translateTextWithAI } = useAIText();
+  
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [descriptions, setDescriptions] = useState<Description[]>([]);
@@ -160,19 +163,13 @@ const DescriptionField = ({
   // Translate text using the Supabase edge function
   const translateText = async (text: string) => {
     try {
-      const response = await fetch('https://fbkbhdsdhhopjpamgsqb.supabase.co/functions/v1/translate-text', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ text })
-      });
+      // Use Gemini AI for translation
+      const translatedText = await translateTextWithAI(text);
       
-      if (!response.ok) {
-        throw new Error('Failed to translate text');
+      if (!translatedText) {
+        throw new Error('Translation failed');
       }
       
-      const { translatedText } = await response.json();
       return translatedText;
     } catch (error: any) {
       console.error('Translation error:', error);
@@ -181,7 +178,7 @@ const DescriptionField = ({
         title: 'Translation failed',
         description: error.message,
       });
-      return text;
+      return text; // Return original text as fallback
     }
   };
   

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,6 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import GeminiSettings from '@/components/GeminiSettings';
 
 const SettingsPage = () => {
   const { toast } = useToast();
@@ -263,9 +263,10 @@ const SettingsPage = () => {
       <h2 className="text-3xl font-bold mb-6">Settings</h2>
       
       <Tabs defaultValue="templates">
-        <TabsList className="grid grid-cols-2 mb-6">
+        <TabsList className="grid grid-cols-3 mb-6">
           <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="profile">Profile & Theme</TabsTrigger>
+          <TabsTrigger value="integrations">Integrations</TabsTrigger>
         </TabsList>
         
         <TabsContent value="templates">
@@ -414,6 +415,12 @@ const SettingsPage = () => {
             onSaveBusinessInfo={handleSaveBusinessInfo}
             onUploadLogo={handleUploadLogo}
           />
+        </TabsContent>
+        
+        <TabsContent value="integrations">
+          <div className="grid gap-6">
+            <GeminiSettings />
+          </div>
         </TabsContent>
       </Tabs>
       

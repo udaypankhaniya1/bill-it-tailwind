@@ -73,7 +73,7 @@ export const updateGeminiApiKey = async (apiKey: string): Promise<{ success: boo
   }
 };
 
-export const callGeminiAI = async (text: string): Promise<{ enhancedText?: string; error?: string }> => {
+export const callGeminiAI = async (text: string, action: 'enhance' | 'translate' = 'enhance'): Promise<{ enhancedText?: string; translatedText?: string; error?: string }> => {
   try {
     const { api_key, error } = await getGeminiApiKey();
     
@@ -82,16 +82,20 @@ export const callGeminiAI = async (text: string): Promise<{ enhancedText?: strin
     }
     
     const response = await supabase.functions.invoke('gemini-ai', {
-      body: JSON.stringify({ text, apiKey: api_key }),
+      body: JSON.stringify({ text, apiKey: api_key, action }),
     });
     
     if (response.error) {
-      return { error: response.error.message || 'Failed to call Gemini AI' };
+      return { error: response.error.message || `Failed to call Gemini AI for ${action}` };
     }
     
-    return { enhancedText: response.data.enhancedText };
+    if (action === 'translate') {
+      return { translatedText: response.data.translatedText };
+    } else {
+      return { enhancedText: response.data.enhancedText };
+    }
   } catch (error) {
-    console.error('Exception calling Gemini AI:', error);
-    return { error: 'Failed to call Gemini AI' };
+    console.error(`Exception calling Gemini AI for ${action}:`, error);
+    return { error: `Failed to call Gemini AI for ${action}` };
   }
 };

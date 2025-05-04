@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { text, apiKey } = await req.json();
+    const { text, apiKey, action = 'enhance' } = await req.json();
 
     if (!text) {
       return new Response(
@@ -30,8 +30,16 @@ serve(async (req) => {
       );
     }
 
-    // Call Gemini API
+    // Call Gemini API with different prompts based on action
     const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    
+    let prompt = '';
+    if (action === 'translate') {
+      prompt = `Translate the following English text into Gujarati. Return only the translation inside {{ }}, no explanation or additional text: "${text}"`;
+    } else {
+      prompt = `Enhance the following text professionally while preserving its formatting (bold, italic, lists, headings, and code blocks). Return only the improved version inside {{ }}:\n\n"${text}"`;
+    }
+
     const response = await fetch(`${url}?key=${apiKey}`, {
       method: "POST",
       headers: {
@@ -42,7 +50,7 @@ serve(async (req) => {
           {
             parts: [
               {
-                text: `Enhance the following text professionally while preserving its formatting (bold, italic, lists, headings, and code blocks). Return only the improved version inside {{ }}:\n\n"${text}"`,
+                text: prompt,
               },
             ],
           },
@@ -62,14 +70,21 @@ serve(async (req) => {
     const data = await response.json();
     
     try {
-      // Extract the enhanced text from the response
+      // Extract the enhanced/translated text from the response
       const rawText = data.candidates[0].content.parts[0].text;
-      const enhancedText = rawText.match(/{{(.*?)}}/s)?.[1]?.trim() || rawText;
+      const resultText = rawText.match(/{{(.*?)}}/s)?.[1]?.trim() || rawText;
       
-      return new Response(
-        JSON.stringify({ enhancedText }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      if (action === 'translate') {
+        return new Response(
+          JSON.stringify({ translatedText: resultText }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } else {
+        return new Response(
+          JSON.stringify({ enhancedText: resultText }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     } catch (error) {
       console.error("Error parsing Gemini response:", error);
       return new Response(

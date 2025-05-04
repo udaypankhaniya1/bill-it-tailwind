@@ -16,7 +16,7 @@ export const useAIText = () => {
     }
     
     try {
-      const result = await callGeminiAI(text);
+      const result = await callGeminiAI(text, 'enhance');
       
       if (result.error) {
         toast({
@@ -39,5 +39,39 @@ export const useAIText = () => {
     }
   };
   
-  return { enhanceTextWithAI };
+  const translateTextWithAI = async (text: string): Promise<string | null> => {
+    if (!text) {
+      toast({
+        variant: "destructive",
+        title: "No text provided",
+        description: "Please enter text to translate."
+      });
+      return null;
+    }
+    
+    try {
+      const result = await callGeminiAI(text, 'translate');
+      
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: "AI Translation Failed",
+          description: result.error
+        });
+        return null;
+      }
+      
+      return result.translatedText || null;
+    } catch (error) {
+      console.error("Error translating text with AI:", error);
+      toast({
+        variant: "destructive",
+        title: "AI Translation Error",
+        description: "Failed to translate your text. Please try again."
+      });
+      return null;
+    }
+  };
+  
+  return { enhanceTextWithAI, translateTextWithAI };
 };
