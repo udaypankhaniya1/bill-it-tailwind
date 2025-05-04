@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { applyThemeStyles } from '@/utils/themeUtils';
+import GeminiSettings from './GeminiSettings';
 
 interface ProfileSettingsProps {
   businessName: string;
@@ -237,6 +237,8 @@ const ProfileSettings = ({
           </p>
         </CardContent>
       </Card>
+      
+      <GeminiSettings />
     </div>
   );
 };

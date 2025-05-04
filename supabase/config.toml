@@ -5,4 +5,5 @@ enabled = true
 [functions]
 [functions.translate-text]
 verify_jwt = false
-
+[functions.gemini-ai]
+verify_jwt = false
