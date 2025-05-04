@@ -14,6 +14,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   error: string | null;
   setError: (error: string | null) => void;
 };
@@ -77,6 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setError(null);
+      setLoading(true);
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -88,12 +90,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       setError('Failed to sign in. Please try again.');
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const signUp = async (email: string, password: string) => {
     try {
       setError(null);
+      setLoading(true);
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -110,17 +115,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       setError('Failed to sign up. Please try again.');
       console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      setError(null);
+      setLoading(true);
+      const { error: signInError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/dashboard',
+        }
+      });
+
+      if (signInError) {
+        setError(signInError.message);
+      }
+    } catch (err) {
+      setError('Failed to sign in with Google. Please try again.');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const signOut = async () => {
     try {
       setError(null);
+      setLoading(true);
       await supabase.auth.signOut();
       dispatch(logoutAction());
     } catch (err) {
       setError('Failed to sign out. Please try again.');
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -133,6 +165,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signIn,
         signUp,
         signOut,
+        signInWithGoogle,
         error,
         setError,
       }}
