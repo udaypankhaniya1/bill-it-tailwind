@@ -5,15 +5,18 @@ import { Card } from '@/components/ui/card';
 import { fetchInvoice, Invoice } from '@/services/invoiceService';
 import InvoicePreview from '@/components/InvoicePreview';
 import { useToast } from '@/hooks/use-toast';
-import { FileText, Share } from 'lucide-react';
+import { FileText, Share, Link } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { formatNumber } from '@/utils/formatNumber';
+import { generatePdfFromElement, uploadPdfToStorage, sharePdfViaWhatsApp } from '@/utils/pdfStorage';
 
 const InvoiceViewPage = () => {
   const { id } = useParams<{ id: string }>();
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -133,16 +136,106 @@ const InvoiceViewPage = () => {
     });
   };
 
-  const shareToWhatsApp = () => {
+  const shareToWhatsApp = async () => {
     if (!invoice) return;
     
-    const formattedAmount = formatNumber(invoice.total);
+    try {
+      // Show loading toast
+      toast({
+        title: "Preparing invoice for sharing...",
+        description: "This may take a moment",
+      });
+      
+      setIsExporting(true);
+      
+      // Generate PDF
+      const { dataUrl } = await generatePdfFromElement(
+        'invoice-preview', 
+        `Invoice-${invoice.invoice_number}`
+      );
+      
+      // Upload to Supabase storage
+      const publicUrl = await uploadPdfToStorage(
+        dataUrl, 
+        `Invoice-${invoice.invoice_number}`
+      );
+      
+      // Save the URL for later use
+      setPdfUrl(publicUrl);
+      
+      // Share via WhatsApp
+      sharePdfViaWhatsApp(
+        publicUrl,
+        invoice.invoice_number,
+        invoice.party_name,
+        invoice.total,
+        formatNumber(invoice.total)
+      );
+      
+      toast({
+        title: "Ready to share",
+        description: "WhatsApp will open with your invoice link",
+      });
+    } catch (error) {
+      console.error('Error preparing share:', error);
+      toast({
+        variant: "destructive",
+        title: "Failed to prepare sharing",
+        description: "An error occurred. Please try again.",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const copyPdfLinkToClipboard = async () => {
+    if (!invoice) return;
     
-    const text = `📋 *Invoice #${invoice.invoice_number}*\n\n🏢 *Client:* ${invoice.party_name}\n💰 *Total Amount:* ₹${formattedAmount}\n\nPlease check the invoice details below:`;
-    
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    
-    window.open(whatsappUrl, '_blank');
+    try {
+      let urlToCopy = pdfUrl;
+      
+      // If we don't have a PDF URL yet, generate one
+      if (!urlToCopy) {
+        toast({
+          title: "Preparing PDF link...",
+          description: "This may take a moment",
+        });
+        
+        setIsExporting(true);
+        
+        // Generate PDF
+        const { dataUrl } = await generatePdfFromElement(
+          'invoice-preview', 
+          `Invoice-${invoice.invoice_number}`
+        );
+        
+        // Upload to Supabase storage
+        urlToCopy = await uploadPdfToStorage(
+          dataUrl, 
+          `Invoice-${invoice.invoice_number}`
+        );
+        
+        // Save the URL for later use
+        setPdfUrl(urlToCopy);
+      }
+      
+      // Copy to clipboard
+      await navigator.clipboard.writeText(urlToCopy);
+      
+      toast({
+        title: "Link copied to clipboard",
+        description: "You can now paste it anywhere",
+      });
+    } catch (error) {
+      console.error('Error copying link:', error);
+      toast({
+        variant: "destructive",
+        title: "Failed to copy link",
+        description: "An error occurred. Please try again.",
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   if (isLoading) {
@@ -182,7 +275,7 @@ const InvoiceViewPage = () => {
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-3xl font-bold">Invoice #{invoice?.invoice_number}</h2>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap justify-end">
           <Button onClick={() => navigate('/invoices')} variant="outline">Back</Button>
           <Button onClick={exportAsDoc} variant="outline">
             <FileText className="mr-2" /> Export as Doc
@@ -190,8 +283,21 @@ const InvoiceViewPage = () => {
           <Button onClick={exportAsPDF} variant="outline">
             <FileText className="mr-2" /> Export as PDF
           </Button>
-          <Button onClick={shareToWhatsApp} variant="outline">
-            <Share className="mr-2" /> Share to WhatsApp
+          <Button 
+            onClick={shareToWhatsApp} 
+            variant="outline" 
+            disabled={isExporting}
+          >
+            <Share className="mr-2" /> 
+            {isExporting ? "Preparing..." : "Share to WhatsApp"}
+          </Button>
+          <Button 
+            onClick={copyPdfLinkToClipboard} 
+            variant="outline"
+            disabled={isExporting}
+          >
+            <Link className="mr-2" /> 
+            {isExporting ? "Preparing..." : "Copy PDF Link"}
           </Button>
         </div>
       </div>
