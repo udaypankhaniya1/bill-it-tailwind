@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -10,6 +9,7 @@ import InvoicesPage from '@/pages/InvoicesPage';
 import InvoiceViewPage from '@/pages/InvoiceViewPage';
 import CreateInvoicePage from '@/pages/CreateInvoicePage';
 import SettingsPage from '@/pages/SettingsPage';
+import DescriptionsPage from '@/pages/DescriptionsPage';
 import Login from '@/pages/Login';
 import Signup from '@/pages/Signup';
 import NotFound from '@/pages/NotFound';
@@ -60,6 +60,7 @@ const App = () => {
         <Route path="/invoices" element={<ProtectedRoute><InvoicesPage /></ProtectedRoute>} />
         <Route path="/invoices/:id" element={<ProtectedRoute><InvoiceViewPage /></ProtectedRoute>} />
         <Route path="/create-invoice" element={<ProtectedRoute><CreateInvoicePage /></ProtectedRoute>} />
+        <Route path="/descriptions" element={<ProtectedRoute><DescriptionsPage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
         
