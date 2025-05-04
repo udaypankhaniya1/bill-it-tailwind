@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useDispatch, useSelector } from "react-redux";
-import { logout } from "@/redux/slices/authSlice";
 import { RootState } from "@/redux/store";
 import {
   DropdownMenu,
@@ -15,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/lib/auth";
 
 interface TopBarProps {
   onMenuClick: () => void;
@@ -25,16 +25,27 @@ const TopBar = ({ onMenuClick, isSidebarOpen }: TopBarProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const dispatch = useDispatch();
+  const { signOut } = useAuth();
   const user = useSelector((state: RootState) => state.auth.user);
   const currentThemeId = useSelector((state: RootState) => state.template.currentTheme);
 
-  const handleLogout = () => {
-    dispatch(logout());
-    toast({
-      title: "Logged out",
-      description: "You have been logged out successfully",
-    });
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Logging out",
+        description: "Signing you out...",
+      });
+      
+      // The redirect will happen automatically through the auth state change listener
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast({
+        variant: "destructive",
+        title: "Logout failed",
+        description: "There was a problem signing you out. Please try again.",
+      });
+    }
   };
 
   const getUserInitials = () => {

@@ -28,7 +28,7 @@ import { setTheme } from './redux/slices/layoutSlice';
 const App = () => {
   const dispatch = useDispatch();
   const themes = useSelector((state: RootState) => state.template.themes);
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   
   // Initialize theme from local storage
   useEffect(() => {
@@ -45,12 +45,16 @@ const App = () => {
     }
   }, [dispatch, themes]);
   
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Loading authentication...</div>;
+  }
+  
   return (
     <>
       <Routes>
         <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
+        <Route path="/signup" element={user ? <Navigate to="/dashboard" replace /> : <Signup />} />
         
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/invoices" element={<ProtectedRoute><InvoicesPage /></ProtectedRoute>} />

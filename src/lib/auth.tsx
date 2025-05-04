@@ -30,9 +30,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   
   useEffect(() => {
-    // Set up auth state listener
+    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
+        console.log('Auth state changed:', event, currentSession?.user?.id);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
@@ -56,8 +57,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    // Check for existing session
+    // Then check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      console.log('Retrieved session:', currentSession?.user?.id);
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
@@ -146,8 +148,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
       setLoading(true);
-      await supabase.auth.signOut();
-      dispatch(logoutAction());
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        throw error;
+      }
     } catch (err) {
       setError('Failed to sign out. Please try again.');
       console.error(err);
@@ -188,7 +192,9 @@ export const RequireAuth = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('RequireAuth check:', user?.id, loading);
     if (!loading && !user) {
+      console.log('Not authenticated, redirecting to login');
       navigate('/login');
     }
   }, [user, loading, navigate]);

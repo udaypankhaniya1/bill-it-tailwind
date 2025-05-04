@@ -5,11 +5,11 @@ import { ChevronDown, ChevronRight, Home, FileText, Plus, Settings, LogOut, User
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '@/redux/slices/authSlice';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { RootState } from '@/redux/store';
 import { ThemeOption } from '@/redux/slices/templateSlice';
+import { useAuth } from '@/lib/auth';
 
 type SidebarItem = {
   title: string;
@@ -26,6 +26,7 @@ interface SidebarProps {
 }
 
 export const NewSidebar = ({ isMobile, isSidebarOpen, onSidebarToggle }: SidebarProps) => {
+  const { signOut } = useAuth();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -52,13 +53,23 @@ export const NewSidebar = ({ isMobile, isSidebarOpen, onSidebarToggle }: Sidebar
   };
 
   // Handle logout
-  const handleLogout = () => {
-    dispatch(logout());
-    toast({
-      title: "Logged out",
-      description: "You have been logged out successfully",
-    });
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Logging out",
+        description: "Signing you out...",
+      });
+      
+      // The auth state change listener will redirect the user
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast({
+        variant: "destructive",
+        title: "Logout failed",
+        description: "There was a problem signing you out. Please try again.",
+      });
+    }
   };
 
   // Sidebar items with nested structure

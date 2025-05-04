@@ -24,8 +24,10 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   
   // Check for authentication
   useEffect(() => {
+    console.log('ProtectedRoute - Auth check:', user?.id, loading);
     if (!loading && !user) {
-      navigate('/login');
+      console.log('ProtectedRoute - Not authenticated, redirecting to login');
+      navigate('/login', { replace: true });
     }
   }, [user, loading, navigate]);
   
@@ -46,7 +48,9 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
-  if (!user) return null;
+  if (!user) {
+    return null;
+  }
 
   return (
     <SidebarProvider>

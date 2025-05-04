@@ -30,7 +30,9 @@ const Login = () => {
   };
 
   useEffect(() => {
+    console.log("Login component - User check:", user?.id);
     if (user) {
+      console.log("Login - User authenticated, redirecting to dashboard");
       navigate('/dashboard');
     }
   }, [user, navigate]);
