@@ -6,10 +6,13 @@ import { fetchInvoice, Invoice } from '@/services/invoiceService';
 import InvoicePreview from '@/components/InvoicePreview';
 import { useToast } from '@/hooks/use-toast';
 import { FileText, Share, Link } from 'lucide-react';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
 import { formatNumber } from '@/utils/formatNumber';
-import { generatePdfFromElement, uploadPdfToStorage, sharePdfViaWhatsApp } from '@/utils/pdfStorage';
+import { 
+  generatePdfFromElement, 
+  uploadPdfToStorage, 
+  sharePdfViaWhatsApp, 
+  WhatsAppMessageConfig 
+} from '@/utils/pdfStorage';
 
 const InvoiceViewPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +20,12 @@ const InvoiceViewPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [whatsAppConfig, setWhatsAppConfig] = useState<WhatsAppMessageConfig>({
+    customMessage: "Please check the invoice details in the attached PDF link.",
+    includeInvoiceNumber: true,
+    includePartyName: true,
+    includeAmount: true
+  });
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -137,7 +146,7 @@ const InvoiceViewPage = () => {
   };
 
   const shareToWhatsApp = async () => {
-    if (!invoice) return;
+    if (!invoice || !id) return;
     
     try {
       // Show loading toast
@@ -154,11 +163,8 @@ const InvoiceViewPage = () => {
         `Invoice-${invoice.invoice_number}`
       );
       
-      // Upload to Supabase storage
-      const publicUrl = await uploadPdfToStorage(
-        dataUrl, 
-        `Invoice-${invoice.invoice_number}`
-      );
+      // Upload to Supabase storage using invoice ID for deduplication
+      const publicUrl = await uploadPdfToStorage(dataUrl, id);
       
       // Save the URL for later use
       setPdfUrl(publicUrl);
@@ -169,7 +175,8 @@ const InvoiceViewPage = () => {
         invoice.invoice_number,
         invoice.party_name,
         invoice.total,
-        formatNumber(invoice.total)
+        formatNumber(invoice.total),
+        whatsAppConfig
       );
       
       toast({
@@ -189,7 +196,7 @@ const InvoiceViewPage = () => {
   };
 
   const copyPdfLinkToClipboard = async () => {
-    if (!invoice) return;
+    if (!invoice || !id) return;
     
     try {
       let urlToCopy = pdfUrl;
@@ -209,11 +216,8 @@ const InvoiceViewPage = () => {
           `Invoice-${invoice.invoice_number}`
         );
         
-        // Upload to Supabase storage
-        urlToCopy = await uploadPdfToStorage(
-          dataUrl, 
-          `Invoice-${invoice.invoice_number}`
-        );
+        // Upload to Supabase storage using invoice ID for deduplication
+        urlToCopy = await uploadPdfToStorage(dataUrl, id);
         
         // Save the URL for later use
         setPdfUrl(urlToCopy);
