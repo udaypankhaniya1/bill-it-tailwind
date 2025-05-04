@@ -102,7 +102,7 @@ const InvoicesPage = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => navigate(`/invoice/${invoice.id}`)}
+                          onClick={() => navigate(`/invoices/${invoice.id}`)}
                         >
                           <Eye size={16} className="mr-1" /> View
                         </Button>
