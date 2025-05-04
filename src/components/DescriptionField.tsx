@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,7 +26,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Check, Edit } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { useAIText } from '@/hooks/use-ai-text';
