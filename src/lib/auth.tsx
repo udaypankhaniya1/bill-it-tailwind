@@ -126,10 +126,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setError(null);
       setLoading(true);
+      
+      // Get the current URL's origin to use for redirects
+      const origin = window.location.origin;
+      
       const { error: signInError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + '/dashboard',
+          redirectTo: `${origin}/dashboard`, // Use the dynamic origin instead of hardcoded URL
         }
       });
 
