@@ -41,15 +41,16 @@ export const generatePdfFromElement = async (
 
 export const uploadPdfToStorage = async (
   pdfDataUrl: string, 
-  invoiceId: string
+  fileName: string
 ): Promise<string> => {
   try {
     // Convert data URL to Blob
     const res = await fetch(pdfDataUrl);
     const blob = await res.blob();
     
-    // Use invoice ID as filename for deduplication
-    const uniqueFileName = `invoice-${invoiceId}.pdf`;
+    // Generate a unique filename
+    const timestamp = new Date().getTime();
+    const uniqueFileName = `${fileName.replace(/\s+/g, '-')}-${timestamp}.pdf`;
     
     // Upload the file to Supabase Storage
     const { data, error } = await supabase.storage
@@ -76,59 +77,15 @@ export const uploadPdfToStorage = async (
   }
 };
 
-// Interface for WhatsApp message customization
-export interface WhatsAppMessageConfig {
-  customMessage?: string;
-  includeInvoiceNumber?: boolean;
-  includePartyName?: boolean;
-  includeAmount?: boolean;
-}
-
 export const sharePdfViaWhatsApp = (
   publicUrl: string, 
   invoiceNumber: string,
   partyName: string,
   amount: number,
-  formattedAmount: string,
-  config: WhatsAppMessageConfig = {}
+  formattedAmount: string
 ) => {
-  // Default configuration
-  const defaultConfig = {
-    customMessage: "Please check the invoice details in the attached PDF link.",
-    includeInvoiceNumber: true,
-    includePartyName: true,
-    includeAmount: true
-  };
-  
-  // Merge provided config with defaults
-  const finalConfig = { ...defaultConfig, ...config };
-  
-  // Build the message parts
-  let messageParts = [];
-  
-  // Add invoice number if configured
-  if (finalConfig.includeInvoiceNumber) {
-    messageParts.push(`📋 *Invoice #${invoiceNumber}*\n`);
-  }
-  
-  // Add party name if configured
-  if (finalConfig.includePartyName) {
-    messageParts.push(`🏢 *Client:* ${partyName}\n`);
-  }
-  
-  // Add amount if configured
-  if (finalConfig.includeAmount) {
-    messageParts.push(`💰 *Total Amount:* ₹${formattedAmount}\n`);
-  }
-  
-  // Add PDF link
-  messageParts.push(`\n🔗 *View PDF:* ${publicUrl}\n\n`);
-  
-  // Add custom message
-  messageParts.push(finalConfig.customMessage);
-  
   // Create the message text
-  const message = messageParts.join('');
+  const message = `📋 *Invoice #${invoiceNumber}*\n\n🏢 *Client:* ${partyName}\n💰 *Total Amount:* ₹${formattedAmount}\n\n🔗 *View PDF:* ${publicUrl}\n\nPlease check the invoice details in the attached PDF link.`;
   
   // Encode the message for WhatsApp
   const encodedMessage = encodeURIComponent(message);
