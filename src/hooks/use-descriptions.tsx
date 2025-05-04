@@ -48,7 +48,7 @@ export const useDescriptions = (searchTerm: string = '') => {
     };
   }, [searchTerm]);
   
-  return { descriptions, loading, error, refresh: () => setSearchTerm('') };
+  return { descriptions, loading, error, refresh: () => {} };
 };
 
 export default useDescriptions;

@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { ChevronDown, ChevronRight, Home, FileText, Plus, Settings, LogOut, User, Menu, FilePlus, FileDescription } from 'lucide-react';
+import { ChevronDown, ChevronRight, Home, FileText, Plus, Settings, LogOut, User, Menu, FilePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useDispatch, useSelector } from 'react-redux';
