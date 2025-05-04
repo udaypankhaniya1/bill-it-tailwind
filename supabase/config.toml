@@ -5,3 +5,4 @@ enabled = true
 [functions]
 [functions.translate-text]
 verify_jwt = false
+
