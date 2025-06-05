@@ -1,4 +1,3 @@
-
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface Template {
@@ -20,6 +19,7 @@ export interface Template {
   createdAt: string;
   updatedAt: string;
   logoUrl?: string;
+  whatsappMessageTemplate?: string;
 }
 
 export interface ThemeOption {
@@ -43,6 +43,7 @@ interface TemplateState {
   error: string | null;
   currentTheme: string;
   themes: ThemeOption[];
+  whatsappMessageTemplate: string;
 }
 
 const lightThemes: ThemeOption[] = [
@@ -174,7 +175,17 @@ const defaultTemplate: Template = {
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   logoUrl: undefined,
+  whatsappMessageTemplate: undefined,
 };
+
+const defaultWhatsappMessage = `📋 *Invoice #{{invoice_number}}*
+
+🏢 *Client:* {{client_name}}
+💰 *Total Amount:* ₹{{total_amount}}
+
+🔗 *View PDF:* {{invoice_link}}
+
+Please check the invoice details in the attached PDF link.`;
 
 const initialState: TemplateState = {
   templates: [defaultTemplate],
@@ -183,6 +194,7 @@ const initialState: TemplateState = {
   error: null,
   currentTheme: 'light-blue',
   themes: [...lightThemes, ...darkThemes],
+  whatsappMessageTemplate: defaultWhatsappMessage,
 };
 
 const templateSlice = createSlice({
@@ -225,6 +237,9 @@ const templateSlice = createSlice({
     setCurrentTheme(state, action: PayloadAction<string>) {
       state.currentTheme = action.payload;
     },
+    setWhatsappMessageTemplate(state, action: PayloadAction<string>) {
+      state.whatsappMessageTemplate = action.payload;
+    },
   },
 });
 
@@ -236,5 +251,6 @@ export const {
   removeTemplate,
   updateTemplateLogo,
   setCurrentTheme,
+  setWhatsappMessageTemplate,
 } = templateSlice.actions;
 export default templateSlice.reducer;

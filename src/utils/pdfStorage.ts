@@ -101,9 +101,25 @@ export const sharePdfViaWhatsApp = (
   invoiceNumber: string,
   partyName: string,
   amount: number,
-  formattedAmount: string
+  formattedAmount: string,
+  messageTemplate?: string
 ) => {
-  const message = `📋 *Invoice #${invoiceNumber}*\n\n🏢 *Client:* ${partyName}\n💰 *Total Amount:* ₹${formattedAmount}\n\n🔗 *View PDF:* ${publicUrl}\n\nPlease check the invoice details in the attached PDF link.`;
+  // Use custom template if provided, otherwise use default
+  const template = messageTemplate || `📋 *Invoice #{{invoice_number}}*
+
+🏢 *Client:* {{client_name}}
+💰 *Total Amount:* ₹{{total_amount}}
+
+🔗 *View PDF:* {{invoice_link}}
+
+Please check the invoice details in the attached PDF link.`;
+
+  // Replace variables in the template
+  const message = template
+    .replace(/{{invoice_number}}/g, invoiceNumber)
+    .replace(/{{client_name}}/g, partyName)
+    .replace(/{{total_amount}}/g, formattedAmount)
+    .replace(/{{invoice_link}}/g, publicUrl);
   
   const encodedMessage = encodeURIComponent(message);
   const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;

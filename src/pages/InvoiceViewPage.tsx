@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { fetchInvoice, Invoice } from '@/services/invoiceService';
 import InvoicePreview from '@/components/InvoicePreview';
 import { useToast } from '@/hooks/use-toast';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
 import { FileText, Share, Link, Languages } from 'lucide-react';
 import { formatNumber } from '@/utils/formatNumber';
 import { generatePdfFromElement, uploadPdfToStorage, sharePdfViaWhatsApp } from '@/utils/pdfStorage';
@@ -21,6 +22,9 @@ const InvoiceViewPage = () => {
   const [isGujarati, setIsGujarati] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Get the custom WhatsApp message template from Redux
+  const whatsappMessageTemplate = useSelector((state: RootState) => state.template.whatsappMessageTemplate);
 
   useEffect(() => {
     const loadInvoice = async () => {
@@ -220,12 +224,14 @@ const InvoiceViewPage = () => {
       
       setPdfUrl(publicUrl);
       
+      // Use the custom WhatsApp message template
       sharePdfViaWhatsApp(
         publicUrl,
         invoice.invoice_number,
         invoice.party_name,
         invoice.total,
-        formatNumber(invoice.total)
+        formatNumber(invoice.total),
+        whatsappMessageTemplate
       );
       
       toast({

@@ -9,6 +9,7 @@ import { addTemplate, updateTemplate, removeTemplate } from '@/redux/slices/temp
 import { v4 as uuidv4 } from 'uuid';
 import TemplateCreator from '@/components/TemplateCreator';
 import ProfileSettings from '@/components/ProfileSettings';
+import WhatsAppMessageSettings from '@/components/WhatsAppMessageSettings';
 import { createTemplate, fetchTemplates, updateTemplate as updateTemplateService, deleteTemplate } from '@/services/templateService';
 import { FileText, Plus, Trash } from 'lucide-react';
 import {
@@ -263,9 +264,10 @@ const SettingsPage = () => {
       <h2 className="text-3xl font-bold mb-6">Settings</h2>
       
       <Tabs defaultValue="templates">
-        <TabsList className="grid grid-cols-3 mb-6">
+        <TabsList className="grid grid-cols-4 mb-6">
           <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="profile">Profile & Theme</TabsTrigger>
+          <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
         </TabsList>
         
@@ -415,6 +417,12 @@ const SettingsPage = () => {
             onSaveBusinessInfo={handleSaveBusinessInfo}
             onUploadLogo={handleUploadLogo}
           />
+        </TabsContent>
+        
+        <TabsContent value="whatsapp">
+          <div className="grid gap-6">
+            <WhatsAppMessageSettings />
+          </div>
         </TabsContent>
         
         <TabsContent value="integrations">
