@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { formatNumber } from '@/utils/formatNumber';
-import { uploadLogo, applyWatermark } from '@/utils/fileUpload';
+import { uploadLogo } from '@/utils/fileUpload';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Upload } from 'lucide-react';
 
 interface TemplatePreviewProps {
   invoice: {
@@ -50,14 +51,18 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
 
     setUploading(true);
     try {
+      console.log('Starting logo upload for file:', file.name);
       const url = await uploadLogo(file);
       if (url && onLogoUpload) {
+        console.log('Logo upload successful, calling onLogoUpload with:', url);
         onLogoUpload(url);
         
         toast({
           title: "Logo uploaded successfully",
           description: "Your template has been updated with the new logo.",
         });
+      } else {
+        throw new Error('Failed to upload logo');
       }
     } catch (error) {
       console.error('Error uploading logo:', error);
@@ -68,6 +73,8 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
       });
     } finally {
       setUploading(false);
+      // Clear the input so the same file can be uploaded again if needed
+      event.target.value = '';
     }
   };
 
@@ -87,6 +94,8 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
   const subtotal = invoice.items.reduce((sum, item) => sum + item.total, 0);
   const gst = showGst ? subtotal * 0.18 : 0;
   const total = subtotal + gst;
+
+  console.log('TemplatePreview render - showLogo:', showLogo, 'logoUrl:', template.logoUrl);
 
   return (
     <div className="bg-white p-2 md:p-4 text-xs md:text-sm print:text-sm relative" style={{ maxHeight: '600px', overflow: 'auto' }}>
@@ -122,6 +131,7 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
             </div>
           </div>
           
+          {/* Logo Section - Only show if showLogo is true */}
           {showLogo && (
             <div className={`w-16 h-16 border border-gray-300 rounded flex items-center justify-center ${
               headerPosition === 'center' ? 'md:absolute md:right-0' : 
@@ -131,22 +141,28 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
               {template.logoUrl ? (
                 <img 
                   src={template.logoUrl} 
-                  alt="Logo" 
+                  alt="Company Logo" 
                   className="max-w-full max-h-full object-contain"
+                  onError={(e) => {
+                    console.error('Failed to load logo image:', template.logoUrl);
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
               ) : (
-                <div className="relative w-full h-full flex items-center justify-center">
+                <div className="relative w-full h-full flex flex-col items-center justify-center">
                   {uploading ? (
                     <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
                   ) : (
                     <>
-                      <span className="text-xs text-black font-medium">Logo</span>
+                      <Upload className="h-3 w-3 text-gray-400 mb-1" />
+                      <span className="text-xs text-gray-400 font-medium">Upload</span>
                       <input
                         type="file"
                         accept="image/*"
                         onChange={handleLogoUpload}
                         className="absolute inset-0 opacity-0 cursor-pointer"
                         title="Upload logo"
+                        disabled={uploading}
                       />
                     </>
                   )}

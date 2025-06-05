@@ -6,22 +6,25 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { fetchInvoice, Invoice } from '@/services/invoiceService';
-import { fetchTemplates, Template } from '@/services/templateService';
+import { fetchTemplates, updateTemplate, Template } from '@/services/templateService';
 import InvoicePreview from '@/components/InvoicePreview';
 import { useToast } from '@/hooks/use-toast';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
-import { FileText, Share, Link, Languages, Settings } from 'lucide-react';
+import { FileText, Share, Link, Languages, Settings, Upload } from 'lucide-react';
 import { formatNumber } from '@/utils/formatNumber';
 import { generatePdfFromElement, uploadPdfToStorage, sharePdfViaWhatsApp } from '@/utils/pdfStorage';
+import { uploadLogo } from '@/utils/fileUpload';
 
 const InvoiceViewPage = () => {
   const { id } = useParams<{ id: string }>();
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isGujarati, setIsGujarati] = useState(false);
   const [documentTitle, setDocumentTitle] = useState<'Bill' | 'Quotation'>('Quotation');
@@ -75,6 +78,7 @@ const InvoiceViewPage = () => {
             }));
             setTemplates(formattedTemplates);
             setSelectedTemplateId(formattedTemplates[0].id);
+            setSelectedTemplate(formattedTemplates[0]);
           }
         } catch (templateError) {
           console.warn('Could not load templates:', templateError);
@@ -101,6 +105,7 @@ const InvoiceViewPage = () => {
           };
           setTemplates([defaultTemplate]);
           setSelectedTemplateId('default');
+          setSelectedTemplate(defaultTemplate);
         }
       } catch (error) {
         console.error('Error loading invoice:', error);
@@ -117,8 +122,78 @@ const InvoiceViewPage = () => {
     loadData();
   }, [id, toast]);
 
-  // Get selected template
-  const selectedTemplate = templates.find(t => t.id === selectedTemplateId) || templates[0];
+  // Update selected template when templateId changes
+  useEffect(() => {
+    const template = templates.find(t => t.id === selectedTemplateId);
+    if (template) {
+      setSelectedTemplate(template);
+    }
+  }, [selectedTemplateId, templates]);
+
+  const handleTemplateUpdate = async (updates: Partial<Template>) => {
+    if (!selectedTemplate) return;
+
+    try {
+      console.log('Updating template with:', updates);
+      const updatedTemplate = { ...selectedTemplate, ...updates };
+      
+      await updateTemplate(updatedTemplate);
+      
+      // Update local state
+      setSelectedTemplate(updatedTemplate);
+      setTemplates(prev => prev.map(t => t.id === updatedTemplate.id ? updatedTemplate : t));
+      
+      console.log('Template updated successfully');
+    } catch (error) {
+      console.error('Error updating template:', error);
+      toast({
+        variant: "destructive",
+        title: "Failed to update template",
+        description: "Please try again later",
+      });
+    }
+  };
+
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !selectedTemplate) return;
+
+    setIsUploadingLogo(true);
+    try {
+      console.log('Starting logo upload...');
+      const logoUrl = await uploadLogo(file);
+      if (logoUrl) {
+        console.log('Logo uploaded successfully, updating template...');
+        await handleTemplateUpdate({ logo_url: logoUrl });
+        
+        toast({
+          title: "Logo uploaded successfully",
+          description: "Your template has been updated with the new logo.",
+        });
+      } else {
+        throw new Error('Failed to upload logo');
+      }
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      toast({
+        title: "Error uploading logo",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingLogo(false);
+      // Clear the input
+      event.target.value = '';
+    }
+  };
+
+  const toggleShowLogo = async () => {
+    if (!selectedTemplate) return;
+    
+    const newShowLogo = !selectedTemplate.show_logo;
+    console.log('Toggling logo visibility to:', newShowLogo);
+    await handleTemplateUpdate({ show_logo: newShowLogo });
+  };
 
   const exportAsPDF = async () => {
     if (!invoice) return;
@@ -435,7 +510,7 @@ const InvoiceViewPage = () => {
       </div>
 
       {/* Controls Panel */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
         {/* Document Title Toggle */}
         <div className="flex items-center space-x-2">
           <Settings className="h-4 w-4" />
@@ -467,6 +542,38 @@ const InvoiceViewPage = () => {
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Logo Controls */}
+        <div className="flex items-center space-x-2">
+          <Label htmlFor="logo-toggle" className="text-sm font-medium">
+            Show Logo
+          </Label>
+          <Switch
+            id="logo-toggle"
+            checked={selectedTemplate?.show_logo ?? false}
+            onCheckedChange={toggleShowLogo}
+          />
+          {selectedTemplate?.show_logo && (
+            <div className="relative">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                disabled={isUploadingLogo}
+                className="ml-2"
+              >
+                <Upload className="h-4 w-4 mr-1" />
+                {isUploadingLogo ? 'Uploading...' : 'Upload Logo'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  disabled={isUploadingLogo}
+                />
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Language Toggle */}

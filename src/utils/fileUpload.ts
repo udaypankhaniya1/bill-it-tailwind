@@ -3,13 +3,28 @@ import { supabase } from '@/integrations/supabase/client';
 
 export const uploadLogo = async (file: File): Promise<string | null> => {
   try {
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      throw new Error('Please upload an image file');
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error('File size must be less than 5MB');
+    }
+
     const fileExt = file.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
     const filePath = `logos/${fileName}`;
+
+    console.log('Uploading logo to:', filePath);
 
     const { error: uploadError } = await supabase.storage
       .from('template-assets')
-      .upload(filePath, file);
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
 
     if (uploadError) {
       console.error('Error uploading file:', uploadError);
@@ -20,6 +35,7 @@ export const uploadLogo = async (file: File): Promise<string | null> => {
       .from('template-assets')
       .getPublicUrl(filePath);
 
+    console.log('Logo uploaded successfully:', publicUrl);
     return publicUrl;
   } catch (error) {
     console.error('Error in uploadLogo:', error);
@@ -29,15 +45,10 @@ export const uploadLogo = async (file: File): Promise<string | null> => {
 
 export const uploadDocument = async (file: File, folder: string): Promise<string | null> => {
   try {
-    // Remove old files if they exist (based on user ID or some identifier)
-    // This would require knowing which file to replace
-    // await deleteOldDocuments(folder);
-    
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
     const filePath = `${folder}/${fileName}`;
 
-    // Upload the new file
     const { error: uploadError } = await supabase.storage
       .from('documents')
       .upload(filePath, file);
@@ -60,7 +71,6 @@ export const uploadDocument = async (file: File, folder: string): Promise<string
 
 export const deleteOldDocuments = async (folder: string, pattern?: string): Promise<void> => {
   try {
-    // List files in the folder with the specified pattern
     const { data: files, error } = await supabase.storage
       .from('documents')
       .list(folder);
@@ -70,14 +80,12 @@ export const deleteOldDocuments = async (folder: string, pattern?: string): Prom
       return;
     }
 
-    // Filter files if pattern is provided
     const filesToDelete = pattern ? 
       files.filter(file => file.name.includes(pattern)) : 
       files;
     
     if (filesToDelete.length === 0) return;
 
-    // Delete the files
     const filePaths = filesToDelete.map(file => `${folder}/${file.name}`);
     const { error: deleteError } = await supabase.storage
       .from('documents')
@@ -95,7 +103,6 @@ export const applyWatermark = async (
   imageUrl: string, 
   watermarkText: string = 'Sharda Mandap Service'
 ): Promise<string> => {
-  // We'll use a canvas to apply the watermark
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = "Anonymous";
@@ -106,32 +113,28 @@ export const applyWatermark = async (
       
       const ctx = canvas.getContext('2d');
       if (!ctx) {
-        resolve(imageUrl); // Return original if context fails
+        resolve(imageUrl);
         return;
       }
       
-      // Draw the original image
       ctx.drawImage(img, 0, 0);
       
-      // Set watermark properties
       ctx.font = `${Math.max(20, img.width * 0.03)}px Arial`;
       ctx.fillStyle = 'rgba(150, 150, 150, 0.5)';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       
-      // Add diagonal watermark
       ctx.save();
       ctx.translate(canvas.width / 2, canvas.height / 2);
-      ctx.rotate(-Math.PI / 4); // 45 degree angle
+      ctx.rotate(-Math.PI / 4);
       ctx.fillText(watermarkText, 0, 0);
       ctx.restore();
       
-      // Get the watermarked image as base64
       const watermarkedImg = canvas.toDataURL('image/jpeg');
       resolve(watermarkedImg);
     };
     
-    img.onerror = () => resolve(imageUrl); // Return original on error
+    img.onerror = () => resolve(imageUrl);
     img.src = imageUrl;
   });
 };
