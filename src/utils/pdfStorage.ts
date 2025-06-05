@@ -12,27 +12,50 @@ export const generatePdfFromElement = async (
     throw new Error(`Element with ID ${elementId} not found`);
   }
 
-  // Create a canvas from the element
+  // Create a canvas from the element with better options for A4
   const canvas = await html2canvas(element, {
     scale: 2,
     useCORS: true,
     logging: false,
+    width: element.scrollWidth,
+    height: element.scrollHeight,
+    windowWidth: 794, // A4 width in pixels at 96 DPI
+    windowHeight: 1123, // A4 height in pixels at 96 DPI
   });
   
   const imgData = canvas.toDataURL('image/png');
+  
+  // Create PDF with A4 dimensions
   const pdf = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
     format: 'a4',
   });
   
+  // A4 dimensions in mm
+  const a4Width = 210;
+  const a4Height = 297;
+  
+  // Calculate image dimensions to fit A4 properly
   const imgProps = pdf.getImageProperties(imgData);
-  const pdfWidth = pdf.internal.pageSize.getWidth();
+  const pdfWidth = a4Width;
   const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
   
-  pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+  // If the content is taller than A4, scale it down to fit
+  if (pdfHeight > a4Height) {
+    const scale = a4Height / pdfHeight;
+    const scaledWidth = pdfWidth * scale;
+    const scaledHeight = a4Height;
+    
+    // Center the scaled content
+    const xOffset = (a4Width - scaledWidth) / 2;
+    pdf.addImage(imgData, 'PNG', xOffset, 0, scaledWidth, scaledHeight);
+  } else {
+    // Center vertically if content is shorter than A4
+    const yOffset = (a4Height - pdfHeight) / 2;
+    pdf.addImage(imgData, 'PNG', 0, yOffset, pdfWidth, pdfHeight);
+  }
   
-  // Return both the PDF object and the data URL
   return {
     pdf,
     dataUrl: pdf.output('datauristring')
@@ -44,15 +67,12 @@ export const uploadPdfToStorage = async (
   fileName: string
 ): Promise<string> => {
   try {
-    // Convert data URL to Blob
     const res = await fetch(pdfDataUrl);
     const blob = await res.blob();
     
-    // Generate a unique filename
     const timestamp = new Date().getTime();
     const uniqueFileName = `${fileName.replace(/\s+/g, '-')}-${timestamp}.pdf`;
     
-    // Upload the file to Supabase Storage
     const { data, error } = await supabase.storage
       .from('invoice_pdfs')
       .upload(uniqueFileName, blob, {
@@ -65,7 +85,6 @@ export const uploadPdfToStorage = async (
       throw error;
     }
     
-    // Get the public URL for the uploaded file
     const { data: { publicUrl } } = supabase.storage
       .from('invoice_pdfs')
       .getPublicUrl(uniqueFileName);
@@ -84,15 +103,10 @@ export const sharePdfViaWhatsApp = (
   amount: number,
   formattedAmount: string
 ) => {
-  // Create the message text
   const message = `📋 *Invoice #${invoiceNumber}*\n\n🏢 *Client:* ${partyName}\n💰 *Total Amount:* ₹${formattedAmount}\n\n🔗 *View PDF:* ${publicUrl}\n\nPlease check the invoice details in the attached PDF link.`;
   
-  // Encode the message for WhatsApp
   const encodedMessage = encodeURIComponent(message);
-  
-  // Construct the WhatsApp URL
   const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
   
-  // Open WhatsApp in a new tab
   window.open(whatsappUrl, '_blank');
 };

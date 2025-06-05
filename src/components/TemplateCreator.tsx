@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Template } from '@/services/templateService';
-import { CheckCircle, Palette, Layout, Type } from 'lucide-react';
+import { CheckCircle, Layout, Type } from 'lucide-react';
 import TemplatePreview from './TemplatePreview';
 
 interface TemplateCreatorProps {
@@ -26,7 +26,6 @@ const TemplateCreator = ({
   isLoading,
   previewInvoice 
 }: TemplateCreatorProps) => {
-  // Template state
   const [templateName, setTemplateName] = useState(initialTemplate?.name || 'New Template');
   const [primaryColor, setPrimaryColor] = useState(initialTemplate?.primary_color || '#3B82F6');
   const [secondaryColor, setSecondaryColor] = useState(initialTemplate?.secondary_color || '#64748B');
@@ -60,6 +59,19 @@ const TemplateCreator = ({
     await onSave(template);
   };
 
+  // Create preview template object that accurately reflects current settings
+  const previewTemplate = {
+    primaryColor,
+    secondaryColor,
+    tableColor,
+    headerPosition,
+    footerDesign,
+    showGst,
+    showContact,
+    showLogo,
+    logoUrl: initialTemplate?.logo_url
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <Card>
@@ -73,14 +85,10 @@ const TemplateCreator = ({
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="basic" className="space-y-4">
-            <TabsList className="grid grid-cols-3 w-full">
+            <TabsList className="grid grid-cols-2 w-full">
               <TabsTrigger value="basic" className="flex items-center gap-2">
                 <Layout className="h-4 w-4" />
                 Basic
-              </TabsTrigger>
-              <TabsTrigger value="colors" className="flex items-center gap-2">
-                <Palette className="h-4 w-4" />
-                Colors
               </TabsTrigger>
               <TabsTrigger value="display" className="flex items-center gap-2">
                 <Type className="h-4 w-4" />
@@ -98,65 +106,7 @@ const TemplateCreator = ({
                   className="mt-1"
                 />
               </div>
-              
-              <div>
-                <Label className="block mb-2">Header Position</Label>
-                <RadioGroup 
-                  value={headerPosition} 
-                  onValueChange={(value) => setHeaderPosition(value as 'left' | 'center' | 'right')}
-                  className="flex gap-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="left" id="left" />
-                    <Label htmlFor="left">Left</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="center" id="center" />
-                    <Label htmlFor="center">Center</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="right" id="right" />
-                    <Label htmlFor="right">Right</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-              
-              <div>
-                <Label className="block mb-2">Footer Design</Label>
-                <RadioGroup 
-                  value={footerDesign} 
-                  onValueChange={(value) => setFooterDesign(value as 'simple' | 'detailed' | 'minimal')}
-                  className="grid grid-cols-3 gap-2"
-                >
-                  <div className="flex flex-col items-center p-2 border rounded-md hover:bg-muted/50 cursor-pointer">
-                    <RadioGroupItem value="simple" id="simple" className="sr-only" />
-                    <div className="w-full h-2 bg-gray-200 mb-1"></div>
-                    <div className="w-3/4 h-2 bg-gray-200 mx-auto"></div>
-                    <Label htmlFor="simple" className="mt-2 text-xs font-medium">Simple</Label>
-                  </div>
-                  <div className="flex flex-col items-center p-2 border rounded-md hover:bg-muted/50 cursor-pointer">
-                    <RadioGroupItem value="detailed" id="detailed" className="sr-only" />
-                    <div className="w-full h-1 bg-gray-200 mb-1"></div>
-                    <div className="w-full grid grid-cols-3 gap-1">
-                      <div className="h-3 bg-gray-200"></div>
-                      <div className="h-3 bg-gray-200"></div>
-                      <div className="h-3 bg-gray-200"></div>
-                    </div>
-                    <Label htmlFor="detailed" className="mt-2 text-xs font-medium">Detailed</Label>
-                  </div>
-                  <div className="flex flex-col items-center p-2 border rounded-md hover:bg-muted/50 cursor-pointer">
-                    <RadioGroupItem value="minimal" id="minimal" className="sr-only" />
-                    <div className="w-full flex justify-between">
-                      <div className="w-1/4 h-2 bg-gray-200"></div>
-                      <div className="w-1/4 h-2 bg-gray-200"></div>
-                    </div>
-                    <Label htmlFor="minimal" className="mt-2 text-xs font-medium">Minimal</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="colors" className="space-y-4">
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="primaryColor">Primary Color</Label>
@@ -241,6 +191,62 @@ const TemplateCreator = ({
                   ))}
                 </div>
               </div>
+              
+              <div>
+                <Label className="block mb-2">Header Position</Label>
+                <RadioGroup 
+                  value={headerPosition} 
+                  onValueChange={(value) => setHeaderPosition(value as 'left' | 'center' | 'right')}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="left" id="left" />
+                    <Label htmlFor="left">Left</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="center" id="center" />
+                    <Label htmlFor="center">Center</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="right" id="right" />
+                    <Label htmlFor="right">Right</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              
+              <div>
+                <Label className="block mb-2">Footer Design</Label>
+                <RadioGroup 
+                  value={footerDesign} 
+                  onValueChange={(value) => setFooterDesign(value as 'simple' | 'detailed' | 'minimal')}
+                  className="grid grid-cols-3 gap-2"
+                >
+                  <div className="flex flex-col items-center p-2 border rounded-md hover:bg-muted/50 cursor-pointer">
+                    <RadioGroupItem value="simple" id="simple" className="sr-only" />
+                    <div className="w-full h-2 bg-gray-200 mb-1"></div>
+                    <div className="w-3/4 h-2 bg-gray-200 mx-auto"></div>
+                    <Label htmlFor="simple" className="mt-2 text-xs font-medium">Simple</Label>
+                  </div>
+                  <div className="flex flex-col items-center p-2 border rounded-md hover:bg-muted/50 cursor-pointer">
+                    <RadioGroupItem value="detailed" id="detailed" className="sr-only" />
+                    <div className="w-full h-1 bg-gray-200 mb-1"></div>
+                    <div className="w-full grid grid-cols-3 gap-1">
+                      <div className="h-3 bg-gray-200"></div>
+                      <div className="h-3 bg-gray-200"></div>
+                      <div className="h-3 bg-gray-200"></div>
+                    </div>
+                    <Label htmlFor="detailed" className="mt-2 text-xs font-medium">Detailed</Label>
+                  </div>
+                  <div className="flex flex-col items-center p-2 border rounded-md hover:bg-muted/50 cursor-pointer">
+                    <RadioGroupItem value="minimal" id="minimal" className="sr-only" />
+                    <div className="w-full flex justify-between">
+                      <div className="w-1/4 h-2 bg-gray-200"></div>
+                      <div className="w-1/4 h-2 bg-gray-200"></div>
+                    </div>
+                    <Label htmlFor="minimal" className="mt-2 text-xs font-medium">Minimal</Label>
+                  </div>
+                </RadioGroup>
+              </div>
             </TabsContent>
             
             <TabsContent value="display" className="space-y-4">
@@ -308,16 +314,7 @@ const TemplateCreator = ({
           <div className="border rounded-lg overflow-hidden">
             <TemplatePreview 
               invoice={previewInvoice}
-              template={{
-                primaryColor,
-                secondaryColor,
-                tableColor,
-                headerPosition,
-                footerDesign,
-                showGst,
-                showContact,
-                showLogo
-              }}
+              template={previewTemplate}
             />
           </div>
         </CardContent>

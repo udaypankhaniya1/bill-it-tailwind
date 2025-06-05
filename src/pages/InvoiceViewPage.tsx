@@ -63,10 +63,32 @@ const InvoiceViewPage = () => {
     });
 
     try {
+      // Ensure the preview element has proper styling for PDF
+      const previewElement = document.getElementById('invoice-preview');
+      if (previewElement) {
+        // Add PDF-specific styling temporarily
+        previewElement.style.width = '210mm';
+        previewElement.style.minHeight = '297mm';
+        previewElement.style.padding = '20mm';
+        previewElement.style.backgroundColor = 'white';
+        previewElement.style.fontSize = '12pt';
+        previewElement.style.lineHeight = '1.4';
+      }
+
       const { pdf } = await generatePdfFromElement(
         'invoice-preview',
         `Invoice-${invoice.invoice_number}${isGujarati ? '-Gujarati' : ''}`
       );
+      
+      // Reset styling after generation
+      if (previewElement) {
+        previewElement.style.width = '';
+        previewElement.style.minHeight = '';
+        previewElement.style.padding = '';
+        previewElement.style.backgroundColor = '';
+        previewElement.style.fontSize = '';
+        previewElement.style.lineHeight = '';
+      }
       
       pdf.save(`Invoice-${invoice.invoice_number}${isGujarati ? '-Gujarati' : ''}.pdf`);
       
@@ -97,16 +119,23 @@ const InvoiceViewPage = () => {
           <meta charset="utf-8">
           <title>Invoice ${invoice.invoice_number}${isGujarati ? ' - Gujarati' : ''}</title>
           <style>
+            @page {
+              size: A4;
+              margin: 20mm;
+            }
             body { 
               font-family: Arial, sans-serif; 
               margin: 0; 
-              padding: 20px;
+              padding: 0;
+              line-height: 1.4;
+              font-size: 12pt;
               ${isGujarati ? 'font-family: "Noto Sans Gujarati", Arial, sans-serif;' : ''}
             }
             table { 
               width: 100%; 
               border-collapse: collapse; 
               margin: 10px 0;
+              page-break-inside: avoid;
             }
             th, td { 
               border: 1px solid #333; 
@@ -124,6 +153,8 @@ const InvoiceViewPage = () => {
             .mb-3 { margin-bottom: 12px; }
             .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
             hr { border: 1px solid #333; margin: 15px 0; }
+            h1, h2 { page-break-after: avoid; }
+            .page-break { page-break-before: always; }
           </style>
         </head>
         <body>
@@ -149,7 +180,6 @@ const InvoiceViewPage = () => {
     if (!invoice) return;
     
     try {
-      // Show loading toast
       toast({
         title: "Preparing invoice for sharing...",
         description: "This may take a moment",
@@ -157,22 +187,39 @@ const InvoiceViewPage = () => {
       
       setIsExporting(true);
       
-      // Generate PDF
+      // Apply PDF formatting before generation
+      const previewElement = document.getElementById('invoice-preview');
+      if (previewElement) {
+        previewElement.style.width = '210mm';
+        previewElement.style.minHeight = '297mm';
+        previewElement.style.padding = '20mm';
+        previewElement.style.backgroundColor = 'white';
+        previewElement.style.fontSize = '12pt';
+        previewElement.style.lineHeight = '1.4';
+      }
+      
       const { dataUrl } = await generatePdfFromElement(
         'invoice-preview', 
         `Invoice-${invoice.invoice_number}${isGujarati ? '-Gujarati' : ''}`
       );
       
-      // Upload to Supabase storage
+      // Reset styling
+      if (previewElement) {
+        previewElement.style.width = '';
+        previewElement.style.minHeight = '';
+        previewElement.style.padding = '';
+        previewElement.style.backgroundColor = '';
+        previewElement.style.fontSize = '';
+        previewElement.style.lineHeight = '';
+      }
+      
       const publicUrl = await uploadPdfToStorage(
         dataUrl, 
         `Invoice-${invoice.invoice_number}${isGujarati ? '-Gujarati' : ''}`
       );
       
-      // Save the URL for later use
       setPdfUrl(publicUrl);
       
-      // Share via WhatsApp
       sharePdfViaWhatsApp(
         publicUrl,
         invoice.invoice_number,
@@ -203,7 +250,6 @@ const InvoiceViewPage = () => {
     try {
       let urlToCopy = pdfUrl;
       
-      // If we don't have a PDF URL yet, generate one
       if (!urlToCopy) {
         toast({
           title: "Preparing PDF link...",
@@ -212,23 +258,40 @@ const InvoiceViewPage = () => {
         
         setIsExporting(true);
         
-        // Generate PDF
+        // Apply PDF formatting before generation
+        const previewElement = document.getElementById('invoice-preview');
+        if (previewElement) {
+          previewElement.style.width = '210mm';
+          previewElement.style.minHeight = '297mm';
+          previewElement.style.padding = '20mm';
+          previewElement.style.backgroundColor = 'white';
+          previewElement.style.fontSize = '12pt';
+          previewElement.style.lineHeight = '1.4';
+        }
+        
         const { dataUrl } = await generatePdfFromElement(
           'invoice-preview', 
           `Invoice-${invoice.invoice_number}${isGujarati ? '-Gujarati' : ''}`
         );
         
-        // Upload to Supabase storage
+        // Reset styling
+        if (previewElement) {
+          previewElement.style.width = '';
+          previewElement.style.minHeight = '';
+          previewElement.style.padding = '';
+          previewElement.style.backgroundColor = '';
+          previewElement.style.fontSize = '';
+          previewElement.style.lineHeight = '';
+        }
+        
         urlToCopy = await uploadPdfToStorage(
           dataUrl, 
           `Invoice-${invoice.invoice_number}${isGujarati ? '-Gujarati' : ''}`
         );
         
-        // Save the URL for later use
         setPdfUrl(urlToCopy);
       }
       
-      // Copy to clipboard
       await navigator.clipboard.writeText(urlToCopy);
       
       toast({
@@ -311,7 +374,6 @@ const InvoiceViewPage = () => {
         </div>
       </div>
 
-      {/* Language Toggle */}
       <div className="flex items-center space-x-2 mb-6 p-4 bg-gray-50 rounded-lg">
         <Languages className="h-4 w-4" />
         <Label htmlFor="language-toggle" className="text-sm font-medium">
