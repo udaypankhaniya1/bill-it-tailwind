@@ -16,6 +16,10 @@ export interface Template {
   headerPosition: 'left' | 'center' | 'right';
   tableColor: string;
   footerDesign: 'simple' | 'detailed' | 'minimal';
+  footerPosition?: 'left' | 'center' | 'right';
+  footerEnabled?: boolean;
+  watermarkText?: string;
+  watermarkEnabled?: boolean;
   createdAt: string;
   updatedAt: string;
   logoUrl?: string;
@@ -159,8 +163,8 @@ const darkThemes: ThemeOption[] = [
 const defaultTemplate: Template = {
   id: 'default',
   name: 'Default',
-  primaryColor: 'blue',
-  secondaryColor: 'gray',
+  primaryColor: '#000000',
+  secondaryColor: '#666666',
   fontSize: {
     header: 'text-xl',
     body: 'text-base',
@@ -172,6 +176,10 @@ const defaultTemplate: Template = {
   headerPosition: 'center',
   tableColor: '#f8f9fa',
   footerDesign: 'simple',
+  footerPosition: 'center',
+  footerEnabled: true,
+  watermarkText: '',
+  watermarkEnabled: false,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   logoUrl: undefined,

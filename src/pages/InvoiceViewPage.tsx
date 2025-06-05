@@ -23,8 +23,9 @@ const InvoiceViewPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Get the custom WhatsApp message template from Redux
+  // Get the custom WhatsApp message template and current template from Redux
   const whatsappMessageTemplate = useSelector((state: RootState) => state.template.whatsappMessageTemplate);
+  const currentTemplate = useSelector((state: RootState) => state.template.currentTemplate);
 
   useEffect(() => {
     const loadInvoice = async () => {
@@ -396,7 +397,22 @@ const InvoiceViewPage = () => {
       </div>
       
       <div id="invoice-preview" className="mb-8">
-        <InvoicePreview invoice={invoice as any} isGujarati={isGujarati} />
+        <InvoicePreview 
+          invoice={invoice as any} 
+          isGujarati={isGujarati} 
+          template={{
+            showGst: currentTemplate?.showGst ?? true,
+            showContact: currentTemplate?.showContact ?? true,
+            showLogo: currentTemplate?.showLogo ?? true,
+            headerPosition: currentTemplate?.headerPosition || 'center',
+            footerDesign: currentTemplate?.footerDesign || 'simple',
+            footerPosition: currentTemplate?.footerPosition || 'center',
+            footerEnabled: currentTemplate?.footerEnabled ?? true,
+            watermarkText: currentTemplate?.watermarkText || '',
+            watermarkEnabled: currentTemplate?.watermarkEnabled ?? false,
+            logoUrl: currentTemplate?.logoUrl
+          }}
+        />
       </div>
     </div>
   );
