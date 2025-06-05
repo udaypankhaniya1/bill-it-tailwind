@@ -6,8 +6,6 @@ import { fetchInvoice, Invoice } from '@/services/invoiceService';
 import InvoicePreview from '@/components/InvoicePreview';
 import { useToast } from '@/hooks/use-toast';
 import { FileText, Share, Link } from 'lucide-react';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
 import { formatNumber } from '@/utils/formatNumber';
 import { generatePdfFromElement, uploadPdfToStorage, sharePdfViaWhatsApp } from '@/utils/pdfStorage';
 
@@ -55,33 +53,17 @@ const InvoiceViewPage = () => {
   const exportAsPDF = async () => {
     if (!invoice) return;
     
-    const invoiceElement = document.getElementById('invoice-preview');
-    if (!invoiceElement) return;
-
     toast({
       title: "Preparing PDF...",
       description: "Please wait while we generate your PDF",
     });
 
     try {
-      const canvas = await html2canvas(invoiceElement, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      });
+      const { pdf } = await generatePdfFromElement(
+        'invoice-preview',
+        `Invoice-${invoice.invoice_number}`
+      );
       
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
-      });
-      
-      const imgProps = pdf.getImageProperties(imgData);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
       pdf.save(`Invoice-${invoice.invoice_number}.pdf`);
       
       toast({
