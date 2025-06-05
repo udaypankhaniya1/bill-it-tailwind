@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useAIText } from '@/hooks/use-ai-text';
@@ -13,8 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { saveDescription } from '@/services/descriptionService';
-import { Description } from './DescriptionsList';
+import { saveDescription, Description } from '@/services/descriptionService';
 import { Loader2 } from 'lucide-react';
 
 interface EditDescriptionDialogProps {
