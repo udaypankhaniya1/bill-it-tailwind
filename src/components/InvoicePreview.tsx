@@ -2,6 +2,11 @@
 import { formatNumber } from "@/utils/formatNumber";
 import { Invoice } from "@/redux/slices/invoiceSlice";
 import { gujaratiTerms, toGujaratiNumber, toGujaratiDate, toGujaratiCurrency } from "@/utils/gujaratiConverter";
+import { uploadLogo } from '@/utils/fileUpload';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2, Upload } from 'lucide-react';
+import { useState } from 'react';
 
 interface InvoicePreviewProps {
   invoice: Invoice;
@@ -19,14 +24,19 @@ interface InvoicePreviewProps {
     watermarkEnabled?: boolean;
     logoUrl?: string;
   };
+  onLogoUpload?: (url: string) => void;
 }
 
 const InvoicePreview = ({
   invoice,
   isGujarati = false,
   documentTitle = 'Quotation',
-  template
+  template,
+  onLogoUpload
 }: InvoicePreviewProps) => {
+  const { toast } = useToast();
+  const [uploading, setUploading] = useState(false);
+
   // Default template values - simplified for black and white printing
   const headerPosition = template?.headerPosition || 'center';
   const footerDesign = template?.footerDesign || 'simple';
@@ -39,6 +49,38 @@ const InvoicePreview = ({
   const showLogo = template?.showLogo ?? true;
   
   console.log('InvoicePreview render - showLogo:', showLogo, 'logoUrl:', template?.logoUrl);
+
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      console.log('Starting logo upload for file:', file.name);
+      const url = await uploadLogo(file);
+      if (url && onLogoUpload) {
+        console.log('Logo upload successful, calling onLogoUpload with:', url);
+        onLogoUpload(url);
+        toast({
+          title: "Logo uploaded successfully",
+          description: "Your template has been updated with the new logo."
+        });
+      } else {
+        throw new Error('Failed to upload logo');
+      }
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      toast({
+        title: "Error uploading logo",
+        description: "Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
+      // Clear the input so the same file can be uploaded again if needed
+      event.target.value = '';
+    }
+  };
 
   const formatCurrency = (amount: number) => {
     return isGujarati ? toGujaratiCurrency(amount) : `₹ ${formatNumber(amount)}`;
@@ -81,10 +123,11 @@ const InvoicePreview = ({
       )}
 
       <div className="relative z-10 flex flex-col flex-1">
-        {/* Header */}
-        <div className={`${headerAlignmentClass} relative mb-6`}>
-          <div className="flex items-start justify-between">
-            <div className={`flex-1 ${headerPosition === 'right' ? 'order-2' : ''}`}>
+        {/* Header - New Layout with Logo Positioned Above Contact Info */}
+        <div className="mb-6">
+          <div className="flex justify-between items-start">
+            {/* Main Header Content - Takes up most space */}
+            <div className="flex-1">
               <h1 className="text-3xl font-bold print:text-2xl mb-3 text-black text-center">
                 {isGujarati ? documentTitle === 'Bill' ? 'બિલ' : 'કોટેશન' : documentTitle}
               </h1>
@@ -93,46 +136,59 @@ const InvoicePreview = ({
                 Porbandar Baypass, Jalaram Nagar, Mangrol, Dist. Junagadh - 362225
               </p>
               
-              {/* GST and Contact on same row */}
-              <div className="flex justify-between items-center mb-2">
-                {showGst && (
-                  <p className="text-black">
-                    <span className="font-medium">GST NO:</span> 24AOSPP7196L1ZX
-                  </p>
-                )}
-                {showContact && (
-                  <p className="text-black">
-                    <span className="font-medium">Mobile:</span> 98246 86047
-                  </p>
-                )}
-              </div>
+              {/* GST info - centered below company info */}
+              {showGst && (
+                <p className="text-black mb-2 text-center">
+                  <span className="font-medium">GST NO:</span> 24AOSPP7196L1ZX
+                </p>
+              )}
             </div>
             
-            {/* Logo Section - Only show if showLogo is true */}
-            {showLogo && (
-              <div className={`w-24 h-24 border border-gray-300 rounded p-2 flex items-center justify-center flex-shrink-0 ${
-                headerPosition === 'right' ? 'order-1 mr-4' : 'ml-4'
-              }`}>
-                {template?.logoUrl ? (
-                  <img 
-                    src={template.logoUrl} 
-                    alt="Company Logo" 
-                    className="max-w-full max-h-full object-contain"
-                    onError={(e) => {
-                      console.error('Failed to load logo image:', template.logoUrl);
-                      // Fallback to placeholder text if image fails to load
-                      e.currentTarget.style.display = 'none';
-                      const parent = e.currentTarget.parentElement;
-                      if (parent) {
-                        parent.innerHTML = '<span class="text-sm text-black font-medium">Logo</span>';
-                      }
-                    }}
-                  />
-                ) : (
-                  <span className="text-sm text-black font-medium">Logo</span>
-                )}
-              </div>
-            )}
+            {/* Right Side - Logo Above Contact */}
+            <div className="flex flex-col items-end space-y-2 ml-6">
+              {/* Logo Section - Only show if showLogo is true */}
+              {showLogo && (
+                <div className="w-24 h-24 border border-gray-300 rounded p-2 flex items-center justify-center flex-shrink-0">
+                  {template?.logoUrl ? (
+                    <img 
+                      src={template.logoUrl} 
+                      alt="Company Logo" 
+                      className="max-w-full max-h-full object-contain"
+                      onError={(e) => {
+                        console.error('Failed to load logo image:', template.logoUrl);
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div className="relative w-full h-full flex flex-col items-center justify-center">
+                      {uploading ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                      ) : (
+                        <>
+                          <Upload className="h-3 w-3 text-gray-400 mb-1" />
+                          <span className="text-xs text-gray-400 font-medium">Upload</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleLogoUpload}
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                            title="Upload logo"
+                            disabled={uploading}
+                          />
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Contact Info - Below Logo */}
+              {showContact && (
+                <p className="text-black text-right">
+                  <span className="font-medium">Mobile:</span> 98246 86047
+                </p>
+              )}
+            </div>
           </div>
         </div>
 

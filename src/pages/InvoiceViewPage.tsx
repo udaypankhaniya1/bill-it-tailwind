@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { fetchInvoice, Invoice } from '@/services/invoiceService';
 import { fetchTemplates, updateTemplate, Template } from '@/services/templateService';
 import TemplatePreview from '@/components/TemplatePreview';
+import InvoicePreview from '@/components/InvoicePreview';
 import { useToast } from '@/hooks/use-toast';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
@@ -605,23 +606,43 @@ const InvoiceViewPage = () => {
       </div>
       
       <div id="invoice-preview" className="mb-8">
-        <TemplatePreview 
-          invoice={invoice as any} 
-          documentTitle={documentTitle}
-          template={{
-            showGst: selectedTemplate?.show_gst ?? true,
-            showContact: selectedTemplate?.show_contact ?? true,
-            showLogo: selectedTemplate?.show_logo ?? true,
-            headerPosition: selectedTemplate?.header_position || 'center',
-            footerDesign: selectedTemplate?.footer_design || 'simple',
-            footerPosition: selectedTemplate?.footer_position || 'center',
-            footerEnabled: selectedTemplate?.footer_enabled ?? true,
-            watermarkText: selectedTemplate?.watermark_text || '',
-            watermarkEnabled: selectedTemplate?.watermark_enabled ?? false,
-            logoUrl: selectedTemplate?.logo_url
-          }}
-          onLogoUpload={handleLogoUpload}
-        />
+        {isGujarati ? (
+          <InvoicePreview 
+            invoice={invoice as any} 
+            isGujarati={isGujarati}
+            documentTitle={documentTitle}
+            template={{
+              showGst: selectedTemplate?.show_gst ?? true,
+              showContact: selectedTemplate?.show_contact ?? true,
+              showLogo: selectedTemplate?.show_logo ?? true,
+              headerPosition: selectedTemplate?.header_position || 'center',
+              footerDesign: selectedTemplate?.footer_design || 'simple',
+              footerPosition: selectedTemplate?.footer_position || 'center',
+              footerEnabled: selectedTemplate?.footer_enabled ?? true,
+              watermarkText: selectedTemplate?.watermark_text || '',
+              watermarkEnabled: selectedTemplate?.watermark_enabled ?? false,
+              logoUrl: selectedTemplate?.logo_url
+            }}
+          />
+        ) : (
+          <TemplatePreview 
+            invoice={invoice as any} 
+            documentTitle={documentTitle}
+            template={{
+              showGst: selectedTemplate?.show_gst ?? true,
+              showContact: selectedTemplate?.show_contact ?? true,
+              showLogo: selectedTemplate?.show_logo ?? true,
+              headerPosition: selectedTemplate?.header_position || 'center',
+              footerDesign: selectedTemplate?.footer_design || 'simple',
+              footerPosition: selectedTemplate?.footer_position || 'center',
+              footerEnabled: selectedTemplate?.footer_enabled ?? true,
+              watermarkText: selectedTemplate?.watermark_text || '',
+              watermarkEnabled: selectedTemplate?.watermark_enabled ?? false,
+              logoUrl: selectedTemplate?.logo_url
+            }}
+            onLogoUpload={handleLogoUpload}
+          />
+        )}
       </div>
     </div>
   );
