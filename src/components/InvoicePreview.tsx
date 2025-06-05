@@ -129,9 +129,9 @@ const InvoicePreview = ({
         <hr className="border-gray-300 border-t mb-6" />
 
         {/* Main Content Grid - Billing Table and Simple Amount Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 rounded-xl">
+        <div className="grid grid-cols-1  gap-6 mb-6 rounded-xl">
           {/* Billing Details - Takes 2 columns */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 rounded-none">
             <h2 className="text-xl font-bold mb-4 print:text-lg text-black">
               {isGujarati ? 'બિલિંગ વિગતો' : 'Billing Details'}
             </h2>
