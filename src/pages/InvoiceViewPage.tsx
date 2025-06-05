@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -80,15 +79,21 @@ const InvoiceViewPage = () => {
         } catch (templateError) {
           console.warn('Could not load templates:', templateError);
           // Set default template if loading fails
-          const defaultTemplate = {
+          const defaultTemplate: Template = {
             id: 'default',
             name: 'Default Template',
+            primary_color: '#000000',
+            secondary_color: '#666666',
+            font_size_header: 'text-2xl',
+            font_size_body: 'text-base',
+            font_size_footer: 'text-sm',
             show_gst: true,
             show_contact: true,
             show_logo: true,
-            header_position: 'center' as 'left' | 'center' | 'right',
-            footer_design: 'simple' as 'simple' | 'detailed' | 'minimal',
-            footer_position: 'center' as 'left' | 'center' | 'right',
+            header_position: 'center',
+            table_color: '#f8f9fa',
+            footer_design: 'simple',
+            footer_position: 'center',
             footer_enabled: true,
             watermark_text: '',
             watermark_enabled: false,

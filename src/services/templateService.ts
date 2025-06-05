@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { getCurrentUserId } from '@/utils/supabaseClient';
@@ -16,6 +17,10 @@ export interface Template {
   header_position: 'left' | 'center' | 'right';
   table_color: string;
   footer_design: 'simple' | 'detailed' | 'minimal';
+  footer_position: 'left' | 'center' | 'right';
+  footer_enabled: boolean;
+  watermark_text: string;
+  watermark_enabled: boolean;
   user_id?: string;
   created_at?: string;
   updated_at?: string;
@@ -65,6 +70,10 @@ export const createTemplate = async (template: Omit<Template, 'id' | 'user_id'>)
       header_position: template.header_position || 'center',
       table_color: template.table_color || '#f8f9fa',
       footer_design: template.footer_design || 'simple',
+      footer_position: template.footer_position || 'center',
+      footer_enabled: template.footer_enabled ?? true,
+      watermark_text: template.watermark_text || '',
+      watermark_enabled: template.watermark_enabled ?? false,
       ...template
     });
 
@@ -92,6 +101,10 @@ export const updateTemplate = async (template: Template) => {
       header_position: template.header_position,
       table_color: template.table_color,
       footer_design: template.footer_design,
+      footer_position: template.footer_position,
+      footer_enabled: template.footer_enabled,
+      watermark_text: template.watermark_text,
+      watermark_enabled: template.watermark_enabled,
       updated_at: new Date().toISOString(),
     })
     .eq('id', template.id);
