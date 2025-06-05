@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -88,6 +87,10 @@ const SettingsPage = () => {
           footer_enabled: template.footer_enabled ?? true,
           watermark_text: template.watermark_text || '',
           watermark_enabled: template.watermark_enabled ?? false,
+          company_name: template.company_name || 'Sharda Mandap Service',
+          company_address: template.company_address || 'Porbandar Baypass, Jalaram Nagar, Mangrol, Dist. Junagadh - 362225',
+          company_mobile: template.company_mobile || '98246 86047',
+          company_gst_number: template.company_gst_number || '24AOSPP7196L1ZX',
           user_id: template.user_id,
           created_at: template.created_at,
           updated_at: template.updated_at,
@@ -150,7 +153,11 @@ const SettingsPage = () => {
           footer_position: templateData.footer_position,
           footer_enabled: templateData.footer_enabled,
           watermark_text: templateData.watermark_text,
-          watermark_enabled: templateData.watermark_enabled
+          watermark_enabled: templateData.watermark_enabled,
+          company_name: templateData.company_name || 'Sharda Mandap Service',
+          company_address: templateData.company_address || 'Porbandar Baypass, Jalaram Nagar, Mangrol, Dist. Junagadh - 362225',
+          company_mobile: templateData.company_mobile || '98246 86047',
+          company_gst_number: templateData.company_gst_number || '24AOSPP7196L1ZX'
         });
         toast({
           title: "Template created",
@@ -312,6 +319,10 @@ const SettingsPage = () => {
                       </CardHeader>
                       <CardContent className="pt-2">
                         <div className="space-y-2 text-sm text-gray-600">
+                          <div className="flex justify-between">
+                            <span>Company:</span>
+                            <span className="truncate max-w-24" title={template.company_name}>{template.company_name}</span>
+                          </div>
                           <div className="flex justify-between">
                             <span>GST:</span>
                             <span>{template.show_gst ? 'Enabled' : 'Disabled'}</span>

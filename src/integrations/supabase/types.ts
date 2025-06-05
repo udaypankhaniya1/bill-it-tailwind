@@ -118,6 +118,10 @@ export type Database = {
       }
       templates: {
         Row: {
+          company_address: string | null
+          company_gst_number: string | null
+          company_mobile: string | null
+          company_name: string | null
           created_at: string
           font_size_body: string
           font_size_footer: string
@@ -141,6 +145,10 @@ export type Database = {
           watermark_text: string | null
         }
         Insert: {
+          company_address?: string | null
+          company_gst_number?: string | null
+          company_mobile?: string | null
+          company_name?: string | null
           created_at?: string
           font_size_body?: string
           font_size_footer?: string
@@ -164,6 +172,10 @@ export type Database = {
           watermark_text?: string | null
         }
         Update: {
+          company_address?: string | null
+          company_gst_number?: string | null
+          company_mobile?: string | null
+          company_name?: string | null
           created_at?: string
           font_size_body?: string
           font_size_footer?: string

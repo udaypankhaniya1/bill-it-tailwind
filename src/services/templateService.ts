@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { getCurrentUserId } from '@/utils/supabaseClient';
@@ -21,6 +20,10 @@ export interface Template {
   footer_enabled: boolean;
   watermark_text: string;
   watermark_enabled: boolean;
+  company_name: string;
+  company_address: string;
+  company_mobile: string;
+  company_gst_number: string;
   user_id?: string;
   created_at?: string;
   updated_at?: string;
@@ -74,6 +77,10 @@ export const createTemplate = async (template: Omit<Template, 'id' | 'user_id'>)
       footer_enabled: template.footer_enabled ?? true,
       watermark_text: template.watermark_text || '',
       watermark_enabled: template.watermark_enabled ?? false,
+      company_name: template.company_name || 'Sharda Mandap Service',
+      company_address: template.company_address || 'Porbandar Baypass, Jalaram Nagar, Mangrol, Dist. Junagadh - 362225',
+      company_mobile: template.company_mobile || '98246 86047',
+      company_gst_number: template.company_gst_number || '24AOSPP7196L1ZX',
       ...template
     });
 
@@ -105,6 +112,11 @@ export const updateTemplate = async (template: Template) => {
       footer_enabled: template.footer_enabled,
       watermark_text: template.watermark_text,
       watermark_enabled: template.watermark_enabled,
+      company_name: template.company_name,
+      company_address: template.company_address,
+      company_mobile: template.company_mobile,
+      company_gst_number: template.company_gst_number,
+      logo_url: template.logo_url,
       updated_at: new Date().toISOString(),
     })
     .eq('id', template.id);

@@ -84,6 +84,10 @@ const InvoiceViewPage = () => {
               footer_enabled: template.footer_enabled ?? true,
               watermark_text: template.watermark_text || '',
               watermark_enabled: template.watermark_enabled ?? false,
+              company_name: template.company_name || 'Sharda Mandap Service',
+              company_address: template.company_address || 'Porbandar Baypass, Jalaram Nagar, Mangrol, Dist. Junagadh - 362225',
+              company_mobile: template.company_mobile || '98246 86047',
+              company_gst_number: template.company_gst_number || '24AOSPP7196L1ZX',
               logo_url: template.logo_url
             }));
             setTemplates(formattedTemplates);
@@ -111,6 +115,10 @@ const InvoiceViewPage = () => {
             footer_enabled: true,
             watermark_text: '',
             watermark_enabled: false,
+            company_name: 'Sharda Mandap Service',
+            company_address: 'Porbandar Baypass, Jalaram Nagar, Mangrol, Dist. Junagadh - 362225',
+            company_mobile: '98246 86047',
+            company_gst_number: '24AOSPP7196L1ZX',
             logo_url: ''
           };
           setTemplates([defaultTemplate]);
@@ -662,7 +670,11 @@ const InvoiceViewPage = () => {
               footerEnabled: selectedTemplate?.footer_enabled ?? true,
               watermarkText: selectedTemplate?.watermark_text || '',
               watermarkEnabled: selectedTemplate?.watermark_enabled ?? false,
-              logoUrl: selectedTemplate?.logo_url
+              logoUrl: selectedTemplate?.logo_url,
+              companyName: selectedTemplate?.company_name,
+              companyAddress: selectedTemplate?.company_address,
+              companyMobile: selectedTemplate?.company_mobile,
+              companyGstNumber: selectedTemplate?.company_gst_number
             }}
             onLogoUpload={handleLogoUpload}
           />
