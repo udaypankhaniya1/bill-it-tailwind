@@ -148,12 +148,12 @@ const TemplateCreator: React.FC<TemplateCreatorProps> = ({
     onSave(templateData);
   };
 
-  // Create preview template object
+  // Create preview template object with proper typing
   const previewTemplate = {
     primaryColor: '#000000',
     secondaryColor: '#666666',
     tableColor: '#f8f9fa',
-    headerPosition: 'center', // Fixed position
+    headerPosition: 'center' as 'left' | 'center' | 'right', // Explicitly type this
     footerDesign: formData.footer_design,
     footerPosition: formData.footer_position,
     footerEnabled: formData.footer_enabled,

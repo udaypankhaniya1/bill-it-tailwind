@@ -198,7 +198,7 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({ invoice, template, on
             <table className="w-full border-collapse border border-gray-300">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="border border-gray-300 p-2 text-left font-bold text-black text-sm" colspan="2">
+                  <th className="border border-gray-300 p-2 text-left font-bold text-black text-sm" colSpan={2}>
                     Amount Details
                   </th>
                 </tr>
