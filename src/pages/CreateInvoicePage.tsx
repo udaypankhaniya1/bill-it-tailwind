@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { fetchTemplates, Template } from '@/services/templateService';
@@ -35,6 +34,10 @@ const CreateInvoicePage = () => {
             footer_enabled: template.footer_enabled ?? true,
             watermark_text: template.watermark_text || '',
             watermark_enabled: template.watermark_enabled ?? false,
+            company_name: template.company_name || 'Sharda Mandap Service',
+            company_address: template.company_address || 'Porbandar Baypass, Jalaram Nagar, Mangrol, Dist. Junagadh - 362225',
+            company_mobile: template.company_mobile || '98246 86047',
+            company_gst_number: template.company_gst_number || '24AOSPP7196L1ZX',
             logo_url: template.logo_url
           }));
           setTemplates(formattedTemplates);
@@ -58,6 +61,10 @@ const CreateInvoicePage = () => {
             footer_enabled: true,
             watermark_text: '',
             watermark_enabled: false,
+            company_name: 'Sharda Mandap Service',
+            company_address: 'Porbandar Baypass, Jalaram Nagar, Mangrol, Dist. Junagadh - 362225',
+            company_mobile: '98246 86047',
+            company_gst_number: '24AOSPP7196L1ZX',
             logo_url: ''
           };
           setTemplates([defaultTemplate]);
@@ -89,6 +96,10 @@ const CreateInvoicePage = () => {
           footer_enabled: true,
           watermark_text: '',
           watermark_enabled: false,
+          company_name: 'Sharda Mandap Service',
+          company_address: 'Porbandar Baypass, Jalaram Nagar, Mangrol, Dist. Junagadh - 362225',
+          company_mobile: '98246 86047',
+          company_gst_number: '24AOSPP7196L1ZX',
           logo_url: ''
         };
         setTemplates([defaultTemplate]);
