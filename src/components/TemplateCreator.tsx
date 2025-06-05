@@ -29,6 +29,7 @@ const TemplateCreator: React.FC<TemplateCreatorProps> = ({
 }) => {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
+  const [documentTitle, setDocumentTitle] = useState<'Bill' | 'Quotation'>('Quotation');
 
   // Form state
   const [formData, setFormData] = useState({
@@ -187,6 +188,20 @@ const TemplateCreator: React.FC<TemplateCreatorProps> = ({
                 placeholder="Enter template name"
                 className="mt-1"
               />
+            </div>
+
+            {/* Preview Document Title */}
+            <div>
+              <Label>Preview Document Type</Label>
+              <Select value={documentTitle} onValueChange={(value) => setDocumentTitle(value as 'Bill' | 'Quotation')}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Quotation">Quotation</SelectItem>
+                  <SelectItem value="Bill">Bill</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Header Settings */}
@@ -395,6 +410,7 @@ const TemplateCreator: React.FC<TemplateCreatorProps> = ({
           <TemplatePreview 
             invoice={previewInvoice}
             template={previewTemplate}
+            documentTitle={documentTitle}
             onLogoUpload={(url) => handleInputChange('logo_url', url)}
           />
         </CardContent>

@@ -1,49 +1,102 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { fetchInvoice, Invoice } from '@/services/invoiceService';
+import { fetchTemplates, Template } from '@/services/templateService';
 import InvoicePreview from '@/components/InvoicePreview';
 import { useToast } from '@/hooks/use-toast';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
-import { FileText, Share, Link, Languages } from 'lucide-react';
+import { FileText, Share, Link, Languages, Settings } from 'lucide-react';
 import { formatNumber } from '@/utils/formatNumber';
 import { generatePdfFromElement, uploadPdfToStorage, sharePdfViaWhatsApp } from '@/utils/pdfStorage';
 
 const InvoiceViewPage = () => {
   const { id } = useParams<{ id: string }>();
   const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isGujarati, setIsGujarati] = useState(false);
+  const [documentTitle, setDocumentTitle] = useState<'Bill' | 'Quotation'>('Quotation');
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Get the custom WhatsApp message template and current template from Redux
+  // Get the custom WhatsApp message template from Redux
   const whatsappMessageTemplate = useSelector((state: RootState) => state.template.whatsappMessageTemplate);
-  const currentTemplate = useSelector((state: RootState) => state.template.currentTemplate);
 
   useEffect(() => {
-    const loadInvoice = async () => {
+    const loadData = async () => {
       if (!id) return;
 
       try {
         setIsLoading(true);
-        const data = await fetchInvoice(id);
-
+        
+        // Load invoice
+        const invoiceData = await fetchInvoice(id);
         const transformedInvoice = {
-          ...data,
-          invoiceNumber: data.invoice_number,
-          partyName: data.party_name,
-          createdAt: data.created_at || '',
-          updatedAt: data.updated_at || '',
+          ...invoiceData,
+          invoiceNumber: invoiceData.invoice_number,
+          partyName: invoiceData.party_name,
+          createdAt: invoiceData.created_at || '',
+          updatedAt: invoiceData.updated_at || '',
         };
-
         setInvoice(transformedInvoice as any);
+
+        // Load templates
+        try {
+          const templatesData = await fetchTemplates();
+          if (templatesData && templatesData.length > 0) {
+            const formattedTemplates = templatesData.map(template => ({
+              id: template.id,
+              name: template.name,
+              primary_color: template.primary_color,
+              secondary_color: template.secondary_color,
+              font_size_header: template.font_size_header,
+              font_size_body: template.font_size_body,
+              font_size_footer: template.font_size_footer,
+              show_gst: template.show_gst,
+              show_contact: template.show_contact,
+              show_logo: template.show_logo,
+              header_position: (template.header_position || 'center') as 'left' | 'center' | 'right',
+              table_color: template.table_color || '#f8f9fa',
+              footer_design: (template.footer_design || 'simple') as 'simple' | 'detailed' | 'minimal',
+              footer_position: (template.footer_position || 'center') as 'left' | 'center' | 'right',
+              footer_enabled: template.footer_enabled ?? true,
+              watermark_text: template.watermark_text || '',
+              watermark_enabled: template.watermark_enabled ?? false,
+              logo_url: template.logo_url
+            }));
+            setTemplates(formattedTemplates);
+            setSelectedTemplateId(formattedTemplates[0].id);
+          }
+        } catch (templateError) {
+          console.warn('Could not load templates:', templateError);
+          // Set default template if loading fails
+          const defaultTemplate = {
+            id: 'default',
+            name: 'Default Template',
+            show_gst: true,
+            show_contact: true,
+            show_logo: true,
+            header_position: 'center' as 'left' | 'center' | 'right',
+            footer_design: 'simple' as 'simple' | 'detailed' | 'minimal',
+            footer_position: 'center' as 'left' | 'center' | 'right',
+            footer_enabled: true,
+            watermark_text: '',
+            watermark_enabled: false,
+            logo_url: ''
+          };
+          setTemplates([defaultTemplate]);
+          setSelectedTemplateId('default');
+        }
       } catch (error) {
         console.error('Error loading invoice:', error);
         toast({
@@ -56,8 +109,11 @@ const InvoiceViewPage = () => {
       }
     };
 
-    loadInvoice();
+    loadData();
   }, [id, toast]);
+
+  // Get selected template
+  const selectedTemplate = templates.find(t => t.id === selectedTemplateId) || templates[0];
 
   const exportAsPDF = async () => {
     if (!invoice) return;
@@ -68,10 +124,8 @@ const InvoiceViewPage = () => {
     });
 
     try {
-      // Ensure the preview element has proper styling for PDF
       const previewElement = document.getElementById('invoice-preview');
       if (previewElement) {
-        // Add PDF-specific styling temporarily
         previewElement.style.width = '210mm';
         previewElement.style.minHeight = '297mm';
         previewElement.style.padding = '20mm';
@@ -82,10 +136,9 @@ const InvoiceViewPage = () => {
 
       const { pdf } = await generatePdfFromElement(
         'invoice-preview',
-        `Invoice-${invoice.invoice_number}${isGujarati ? '-Gujarati' : ''}`
+        `${documentTitle}-${invoice.invoice_number}${isGujarati ? '-Gujarati' : ''}`
       );
       
-      // Reset styling after generation
       if (previewElement) {
         previewElement.style.width = '';
         previewElement.style.minHeight = '';
@@ -95,11 +148,11 @@ const InvoiceViewPage = () => {
         previewElement.style.lineHeight = '';
       }
       
-      pdf.save(`Invoice-${invoice.invoice_number}${isGujarati ? '-Gujarati' : ''}.pdf`);
+      pdf.save(`${documentTitle}-${invoice.invoice_number}${isGujarati ? '-Gujarati' : ''}.pdf`);
       
       toast({
         title: "PDF Exported Successfully",
-        description: "Your invoice has been exported as PDF",
+        description: `Your ${documentTitle.toLowerCase()} has been exported as PDF`,
       });
     } catch (error) {
       console.error('Error exporting PDF:', error);
@@ -122,7 +175,7 @@ const InvoiceViewPage = () => {
       <html>
         <head>
           <meta charset="utf-8">
-          <title>Invoice ${invoice.invoice_number}${isGujarati ? ' - Gujarati' : ''}</title>
+          <title>${documentTitle} ${invoice.invoice_number}${isGujarati ? ' - Gujarati' : ''}</title>
           <style>
             @page {
               size: A4;
@@ -171,13 +224,13 @@ const InvoiceViewPage = () => {
     const blob = new Blob([htmlContent], { type: 'application/msword' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `Invoice-${invoice.invoice_number}${isGujarati ? '-Gujarati' : ''}.doc`;
+    link.download = `${documentTitle}-${invoice.invoice_number}${isGujarati ? '-Gujarati' : ''}.doc`;
     link.click();
     URL.revokeObjectURL(link.href);
 
     toast({
       title: "Document Exported Successfully",
-      description: "Your invoice has been exported as a Word document",
+      description: `Your ${documentTitle.toLowerCase()} has been exported as a Word document`,
     });
   };
 
@@ -192,7 +245,6 @@ const InvoiceViewPage = () => {
       
       setIsExporting(true);
       
-      // Apply PDF formatting before generation
       const previewElement = document.getElementById('invoice-preview');
       if (previewElement) {
         previewElement.style.width = '210mm';
@@ -205,10 +257,9 @@ const InvoiceViewPage = () => {
       
       const { dataUrl } = await generatePdfFromElement(
         'invoice-preview', 
-        `Invoice-${invoice.invoice_number}${isGujarati ? '-Gujarati' : ''}`
+        `${documentTitle}-${invoice.invoice_number}${isGujarati ? '-Gujarati' : ''}`
       );
       
-      // Reset styling
       if (previewElement) {
         previewElement.style.width = '';
         previewElement.style.minHeight = '';
@@ -220,12 +271,11 @@ const InvoiceViewPage = () => {
       
       const publicUrl = await uploadPdfToStorage(
         dataUrl, 
-        `Invoice-${invoice.invoice_number}${isGujarati ? '-Gujarati' : ''}`
+        `${documentTitle}-${invoice.invoice_number}${isGujarati ? '-Gujarati' : ''}`
       );
       
       setPdfUrl(publicUrl);
       
-      // Use the custom WhatsApp message template
       sharePdfViaWhatsApp(
         publicUrl,
         invoice.invoice_number,
@@ -265,7 +315,6 @@ const InvoiceViewPage = () => {
         
         setIsExporting(true);
         
-        // Apply PDF formatting before generation
         const previewElement = document.getElementById('invoice-preview');
         if (previewElement) {
           previewElement.style.width = '210mm';
@@ -278,10 +327,9 @@ const InvoiceViewPage = () => {
         
         const { dataUrl } = await generatePdfFromElement(
           'invoice-preview', 
-          `Invoice-${invoice.invoice_number}${isGujarati ? '-Gujarati' : ''}`
+          `${documentTitle}-${invoice.invoice_number}${isGujarati ? '-Gujarati' : ''}`
         );
         
-        // Reset styling
         if (previewElement) {
           previewElement.style.width = '';
           previewElement.style.minHeight = '';
@@ -293,7 +341,7 @@ const InvoiceViewPage = () => {
         
         urlToCopy = await uploadPdfToStorage(
           dataUrl, 
-          `Invoice-${invoice.invoice_number}${isGujarati ? '-Gujarati' : ''}`
+          `${documentTitle}-${invoice.invoice_number}${isGujarati ? '-Gujarati' : ''}`
         );
         
         setPdfUrl(urlToCopy);
@@ -353,7 +401,7 @@ const InvoiceViewPage = () => {
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold">Invoice #{invoice?.invoice_number}</h2>
+        <h2 className="text-3xl font-bold">{documentTitle} #{invoice?.invoice_number}</h2>
         <div className="flex gap-2 flex-wrap justify-end">
           <Button onClick={() => navigate('/invoices')} variant="outline">Back</Button>
           <Button onClick={exportAsDoc} variant="outline">
@@ -381,36 +429,74 @@ const InvoiceViewPage = () => {
         </div>
       </div>
 
-      <div className="flex items-center space-x-2 mb-6 p-4 bg-gray-50 rounded-lg">
-        <Languages className="h-4 w-4" />
-        <Label htmlFor="language-toggle" className="text-sm font-medium">
-          Generate in Gujarati
-        </Label>
-        <Switch
-          id="language-toggle"
-          checked={isGujarati}
-          onCheckedChange={setIsGujarati}
-        />
-        <span className="text-sm text-gray-600">
-          {isGujarati ? 'Gujarati' : 'English'}
-        </span>
+      {/* Controls Panel */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+        {/* Document Title Toggle */}
+        <div className="flex items-center space-x-2">
+          <Settings className="h-4 w-4" />
+          <Label htmlFor="document-title" className="text-sm font-medium">Document Type</Label>
+          <Select value={documentTitle} onValueChange={(value) => setDocumentTitle(value as 'Bill' | 'Quotation')}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Quotation">Quotation</SelectItem>
+              <SelectItem value="Bill">Bill</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Template Selection */}
+        <div className="flex items-center space-x-2">
+          <Settings className="h-4 w-4" />
+          <Label htmlFor="template-select" className="text-sm font-medium">Template</Label>
+          <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Select template" />
+            </SelectTrigger>
+            <SelectContent>
+              {templates.map((template) => (
+                <SelectItem key={template.id} value={template.id}>
+                  {template.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Language Toggle */}
+        <div className="flex items-center space-x-2">
+          <Languages className="h-4 w-4" />
+          <Label htmlFor="language-toggle" className="text-sm font-medium">
+            Generate in Gujarati
+          </Label>
+          <Switch
+            id="language-toggle"
+            checked={isGujarati}
+            onCheckedChange={setIsGujarati}
+          />
+          <span className="text-sm text-gray-600">
+            {isGujarati ? 'Gujarati' : 'English'}
+          </span>
+        </div>
       </div>
       
       <div id="invoice-preview" className="mb-8">
         <InvoicePreview 
           invoice={invoice as any} 
-          isGujarati={isGujarati} 
+          isGujarati={isGujarati}
+          documentTitle={documentTitle}
           template={{
-            showGst: currentTemplate?.showGst ?? true,
-            showContact: currentTemplate?.showContact ?? true,
-            showLogo: currentTemplate?.showLogo ?? true,
-            headerPosition: currentTemplate?.headerPosition || 'center',
-            footerDesign: currentTemplate?.footerDesign || 'simple',
-            footerPosition: currentTemplate?.footerPosition || 'center',
-            footerEnabled: currentTemplate?.footerEnabled ?? true,
-            watermarkText: currentTemplate?.watermarkText || '',
-            watermarkEnabled: currentTemplate?.watermarkEnabled ?? false,
-            logoUrl: currentTemplate?.logoUrl
+            showGst: selectedTemplate?.show_gst ?? true,
+            showContact: selectedTemplate?.show_contact ?? true,
+            showLogo: selectedTemplate?.show_logo ?? true,
+            headerPosition: selectedTemplate?.header_position || 'center',
+            footerDesign: selectedTemplate?.footer_design || 'simple',
+            footerPosition: selectedTemplate?.footer_position || 'center',
+            footerEnabled: selectedTemplate?.footer_enabled ?? true,
+            watermarkText: selectedTemplate?.watermark_text || '',
+            watermarkEnabled: selectedTemplate?.watermark_enabled ?? false,
+            logoUrl: selectedTemplate?.logo_url
           }}
         />
       </div>

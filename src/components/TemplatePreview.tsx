@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { formatNumber } from '@/utils/formatNumber';
 import { uploadLogo, applyWatermark } from '@/utils/fileUpload';
@@ -33,9 +32,15 @@ interface TemplatePreviewProps {
     watermarkEnabled?: boolean;
   };
   onLogoUpload?: (url: string) => void;
+  documentTitle?: string;
 }
 
-const TemplatePreview: React.FC<TemplatePreviewProps> = ({ invoice, template, onLogoUpload }) => {
+const TemplatePreview: React.FC<TemplatePreviewProps> = ({ 
+  invoice, 
+  template, 
+  onLogoUpload,
+  documentTitle = 'Quotation'
+}) => {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   
@@ -106,7 +111,7 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({ invoice, template, on
           } mb-4 relative`}
         >
           <div className="w-full md:w-auto">
-            <h1 className="text-xl md:text-2xl font-bold mb-1 md:mb-2 text-black">Quotation</h1>
+            <h1 className="text-xl md:text-2xl font-bold mb-1 md:mb-2 text-black">{documentTitle}</h1>
             <p className="font-semibold mb-1 text-black">Sharda Mandap Service</p>
             <p className="text-xs mb-1 text-black">Porbandar Baypass, Jalaram Nagar, Mangrol</p>
             
@@ -165,7 +170,7 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({ invoice, template, on
           </div>
         </div>
         
-        {/* Main Content Grid - Unified Layout */}
+        {/* Main Content Grid - Billing Table and Simple Amount Details */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-3 mb-2 md:mb-3">
           {/* Billing Details - Takes 2 columns */}
           <div className="lg:col-span-2 overflow-x-auto">
@@ -193,33 +198,24 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({ invoice, template, on
             </table>
           </div>
 
-          {/* Amount Details - Single Unified Table */}
+          {/* Simple Amount Details - Right Aligned Plain Text */}
           <div className="lg:col-span-1">
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border border-gray-300 p-2 text-left font-bold text-black text-sm" colSpan={2}>
-                    Amount Details
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="bg-white">
-                  <td className="border border-gray-300 p-2 text-black font-medium text-xs">Subtotal:</td>
-                  <td className="border border-gray-300 p-2 text-right text-black font-bold text-xs">₹ {formatNumber(subtotal)}</td>
-                </tr>
-                {showGst && (
-                  <tr className="bg-gray-50">
-                    <td className="border border-gray-300 p-2 text-black font-medium text-xs">GST (18%):</td>
-                    <td className="border border-gray-300 p-2 text-right text-black font-bold text-xs">₹ {formatNumber(gst)}</td>
-                  </tr>
-                )}
-                <tr className="bg-gray-100">
-                  <td className="border border-gray-300 p-2 text-black font-bold text-sm">Total:</td>
-                  <td className="border border-gray-300 p-2 text-right text-black font-bold text-sm">₹ {formatNumber(total)}</td>
-                </tr>
-              </tbody>
-            </table>
+            <div className="text-right space-y-2">
+              <div className="text-black">
+                <span className="font-medium">Total without GST: </span>
+                <span className="font-bold">₹ {formatNumber(subtotal)}</span>
+              </div>
+              {showGst && (
+                <div className="text-black">
+                  <span className="font-medium">GST (18%): </span>
+                  <span className="font-bold">₹ {formatNumber(gst)}</span>
+                </div>
+              )}
+              <div className="text-black text-lg border-t pt-2">
+                <span className="font-semibold">Total Amount: </span>
+                <span className="font-bold">₹ {formatNumber(total)}</span>
+              </div>
+            </div>
           </div>
         </div>
         

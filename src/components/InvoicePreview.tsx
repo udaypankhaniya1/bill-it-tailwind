@@ -1,4 +1,3 @@
-
 import { formatNumber } from "@/utils/formatNumber";
 import { Invoice } from "@/redux/slices/invoiceSlice";
 import { 
@@ -11,6 +10,7 @@ import {
 interface InvoicePreviewProps {
   invoice: Invoice;
   isGujarati?: boolean;
+  documentTitle?: string;
   template?: {
     showGst?: boolean;
     showContact?: boolean;
@@ -25,7 +25,12 @@ interface InvoicePreviewProps {
   };
 }
 
-const InvoicePreview = ({ invoice, isGujarati = false, template }: InvoicePreviewProps) => {
+const InvoicePreview = ({ 
+  invoice, 
+  isGujarati = false, 
+  documentTitle = 'Quotation',
+  template 
+}: InvoicePreviewProps) => {
   // Default template values - simplified for black and white printing
   const headerPosition = template?.headerPosition || 'center';
   const footerDesign = template?.footerDesign || 'simple';
@@ -83,7 +88,7 @@ const InvoicePreview = ({ invoice, isGujarati = false, template }: InvoicePrevie
           <div className="flex justify-between items-start">
             <div className={headerPosition === 'right' ? 'order-2' : ''}>
               <h1 className="text-3xl font-bold print:text-2xl mb-3 text-black">
-                {isGujarati ? 'કોટેશન' : 'Quotation'}
+                {isGujarati ? (documentTitle === 'Bill' ? 'બિલ' : 'કોટેશન') : documentTitle}
               </h1>
               <p className="font-semibold text-lg mb-2 text-black">Sharda Mandap Service</p>
               <p className="text-black mb-2">
@@ -128,12 +133,12 @@ const InvoicePreview = ({ invoice, isGujarati = false, template }: InvoicePrevie
         {/* Invoice Info */}
         <div className="mb-6">
           <h2 className="text-xl font-bold mb-4 print:text-lg text-black">
-            {isGujarati ? 'બિલ વિગતો' : 'Invoice Details'}
+            {isGujarati ? 'બિલ વિગતો' : `${documentTitle} Details`}
           </h2>
           <div className="grid grid-cols-2 gap-y-3 gap-x-6 text-base">
             <div>
               <span className="font-semibold text-black">
-                {isGujarati ? gujaratiTerms.invoice : 'Invoice No'}:
+                {isGujarati ? gujaratiTerms.invoice : `${documentTitle} No`}:
               </span>
               <span className="text-black ml-2">{invoice.invoiceNumber}</span>
             </div>
@@ -154,7 +159,7 @@ const InvoicePreview = ({ invoice, isGujarati = false, template }: InvoicePrevie
 
         <hr className="border-gray-300 border-t mb-6" />
 
-        {/* Main Content Grid - Unified Layout */}
+        {/* Main Content Grid - Billing Table and Simple Amount Details */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {/* Billing Details - Takes 2 columns */}
           <div className="lg:col-span-2">
@@ -207,48 +212,33 @@ const InvoicePreview = ({ invoice, isGujarati = false, template }: InvoicePrevie
             </div>
           </div>
 
-          {/* Amount Details - Single Unified Table */}
+          {/* Simple Amount Details - Right Aligned Plain Text */}
           <div className="lg:col-span-1">
             <h2 className="text-xl font-bold mb-4 print:text-lg text-black">
               {isGujarati ? gujaratiTerms.summary : 'Amount Summary'}
             </h2>
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border border-gray-300 p-3 text-left font-bold text-black" colSpan={2}>
-                    Amount Details
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="bg-white">
-                  <td className="border border-gray-300 p-3 text-black font-medium">
-                    {isGujarati ? 'GST વિના કુલ:' : 'Subtotal:'}
-                  </td>
-                  <td className="border border-gray-300 p-3 text-right text-black font-bold">
-                    {formatCurrency(invoice.subtotal)}
-                  </td>
-                </tr>
-                {showGst && (
-                  <tr className="bg-gray-50">
-                    <td className="border border-gray-300 p-3 text-black font-medium">
-                      {isGujarati ? `${gujaratiTerms.gst} (18%):` : 'GST (18%):'}
-                    </td>
-                    <td className="border border-gray-300 p-3 text-right text-black font-bold">
-                      {formatCurrency(invoice.gst)}
-                    </td>
-                  </tr>
-                )}
-                <tr className="bg-gray-100">
-                  <td className="border border-gray-300 p-3 text-black font-bold text-lg">
-                    {isGujarati ? 'કુલ રકમ:' : 'Total Amount:'}
-                  </td>
-                  <td className="border border-gray-300 p-3 text-right text-black font-bold text-lg">
-                    {formatCurrency(invoice.total)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <div className="text-right space-y-3">
+              <div className="text-black text-base">
+                <span className="font-medium">
+                  {isGujarati ? 'GST વિના કુલ: ' : 'Total without GST: '}
+                </span>
+                <span className="font-bold">{formatCurrency(invoice.subtotal)}</span>
+              </div>
+              {showGst && (
+                <div className="text-black text-base">
+                  <span className="font-medium">
+                    {isGujarati ? `${gujaratiTerms.gst} (18%): ` : 'GST (18%): '}
+                  </span>
+                  <span className="font-bold">{formatCurrency(invoice.gst)}</span>
+                </div>
+              )}
+              <div className="text-black text-lg border-t pt-3">
+                <span className="font-semibold">
+                  {isGujarati ? 'કુલ રકમ: ' : 'Total Amount: '}
+                </span>
+                <span className="font-bold">{formatCurrency(invoice.total)}</span>
+              </div>
+            </div>
           </div>
         </div>
 
