@@ -125,7 +125,7 @@ const TemplateCreator: React.FC<TemplateCreatorProps> = ({
     secondaryColor: '#666666',
     tableColor: '#f8f9fa',
     headerPosition: formData.header_position,
-    footerDesign: 'simple',
+    footerDesign: 'simple' as 'simple' | 'detailed' | 'minimal',
     footerPosition: formData.footer_position,
     footerEnabled: formData.footer_enabled,
     showGst: formData.show_gst,
