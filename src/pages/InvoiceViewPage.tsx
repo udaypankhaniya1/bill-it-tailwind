@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { fetchInvoice, Invoice } from '@/services/invoiceService';
 import { fetchTemplates, updateTemplate, Template } from '@/services/templateService';
-import InvoicePreview from '@/components/InvoicePreview';
+import TemplatePreview from '@/components/TemplatePreview';
 import { useToast } from '@/hooks/use-toast';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
@@ -154,7 +154,18 @@ const InvoiceViewPage = () => {
     }
   };
 
-  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (logoUrl: string) => {
+    if (!selectedTemplate) return;
+
+    try {
+      console.log('Received logo URL, updating template:', logoUrl);
+      await handleTemplateUpdate({ logo_url: logoUrl });
+    } catch (error) {
+      console.error('Error updating template with logo:', error);
+    }
+  };
+
+  const handleLogoUploadFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !selectedTemplate) return;
 
@@ -567,7 +578,7 @@ const InvoiceViewPage = () => {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={handleLogoUpload}
+                  onChange={handleLogoUploadFile}
                   className="absolute inset-0 opacity-0 cursor-pointer"
                   disabled={isUploadingLogo}
                 />
@@ -594,9 +605,8 @@ const InvoiceViewPage = () => {
       </div>
       
       <div id="invoice-preview" className="mb-8">
-        <InvoicePreview 
+        <TemplatePreview 
           invoice={invoice as any} 
-          isGujarati={isGujarati}
           documentTitle={documentTitle}
           template={{
             showGst: selectedTemplate?.show_gst ?? true,
@@ -610,6 +620,7 @@ const InvoiceViewPage = () => {
             watermarkEnabled: selectedTemplate?.watermark_enabled ?? false,
             logoUrl: selectedTemplate?.logo_url
           }}
+          onLogoUpload={handleLogoUpload}
         />
       </div>
     </div>
