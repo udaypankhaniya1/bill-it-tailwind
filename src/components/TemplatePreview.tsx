@@ -147,26 +147,26 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
         </div>
         
         {/* Main Content Grid - Billing Table and Simple Amount Details */}
-        <div className="grid grid-cols-1 gap-4 mt-3 mb-2 md:mb-3 text-right">
+        <div className="grid grid-cols-1 gap-4 mt-3 mb-2 md:mb-3">
           {/* Billing Details - Takes 2 columns */}
           <div className="lg:col-span-2 overflow-x-auto">
             <table className="w-full border-collapse min-w-full border border-gray-300">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="p-2 text-left border border-gray-300 font-bold text-black ">Sr</th>
-                  <th className="p-2 text-left border border-gray-300 font-bold text-black text-center">Description</th>
+                  <th className="p-2 text-left border border-gray-300 font-bold text-black">Sr</th>
+                  <th className="p-2 text-left border border-gray-300 font-bold text-black">Description</th>
                   <th className="p-2 text-center border border-gray-300 font-bold text-black">Qty</th>
-                  <th className="p-2 text-right border border-gray-300 font-bold text-black  text-center">Rate (₹)</th>
-                  <th className="p-2 text-right border border-gray-300 font-bold text-black  text-center">Total (₹)</th>
+                  <th className="p-2 text-right border border-gray-300 font-bold text-black">Rate (₹)</th>
+                  <th className="p-2 text-right border border-gray-300 font-bold text-black">Total (₹)</th>
                 </tr>
               </thead>
               <tbody>
                 {invoice.items.map((item, index) => <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                     <td className="p-2 border border-gray-300 text-black text-center font-medium">{index + 1}</td>
-                    <td className="p-2 border border-gray-300 text-black  text-center">{item.description}</td>
+                    <td className="p-2 border border-gray-300 text-black">{item.description}</td>
                     <td className="p-2 text-center border border-gray-300 text-black font-medium">{item.quantity}</td>
-                    <td className="p-2 text-right border border-gray-300 text-black font-medium  text-center">{formatNumber(item.rate)}</td>
-                    <td className="p-2 text-right border border-gray-300 text-black font-bold  text-center">{formatNumber(item.total)}</td>
+                    <td className="p-2 text-right border border-gray-300 text-black font-medium">{formatNumber(item.rate)}</td>
+                    <td className="p-2 text-right border border-gray-300 text-black font-bold">{formatNumber(item.total)}</td>
                   </tr>)}
               </tbody>
             </table>
