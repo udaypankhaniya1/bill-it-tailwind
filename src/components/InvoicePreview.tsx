@@ -89,20 +89,24 @@ const InvoicePreview = ({ invoice, isGujarati = false, template }: InvoicePrevie
               <p className="text-black mb-2">
                 Porbandar Baypass, Jalaram Nagar, Mangrol, Dist. Junagadh - 362225
               </p>
-              {showGst && (
-                <p className="text-black mb-2">
-                  <span className="font-medium">GST NO:</span> 24AOSPP7196L1ZX
-                </p>
-              )}
-              {showContact && (
-                <p className="text-black">
-                  <span className="font-medium">Mobile:</span> 98246 86047
-                </p>
-              )}
+              
+              {/* GST and Contact on same row */}
+              <div className="flex justify-between items-center mb-2">
+                {showGst && (
+                  <p className="text-black">
+                    <span className="font-medium">GST NO:</span> 24AOSPP7196L1ZX
+                  </p>
+                )}
+                {showContact && (
+                  <p className="text-black">
+                    <span className="font-medium">Mobile:</span> 98246 86047
+                  </p>
+                )}
+              </div>
             </div>
             
             {showLogo && (
-              <div className={`w-24 h-24 border-2 border-black rounded p-2 flex items-center justify-center ${
+              <div className={`w-24 h-24 border border-gray-300 rounded p-2 flex items-center justify-center ${
                 headerPosition === 'right' ? 'order-1' : ''
               }`}>
                 {template?.logoUrl ? (
@@ -119,7 +123,7 @@ const InvoicePreview = ({ invoice, isGujarati = false, template }: InvoicePrevie
           </div>
         </div>
 
-        <hr className="border-black border-t-2 mb-6" />
+        <hr className="border-gray-300 border-t mb-6" />
 
         {/* Invoice Info */}
         <div className="mb-6">
@@ -148,90 +152,103 @@ const InvoicePreview = ({ invoice, isGujarati = false, template }: InvoicePrevie
           </div>
         </div>
 
-        <hr className="border-black border-t-2 mb-6" />
+        <hr className="border-gray-300 border-t mb-6" />
 
-        {/* Redesigned Billing Details Table */}
-        <div className="mb-6">
-          <h2 className="text-xl font-bold mb-4 print:text-lg text-black">
-            {isGujarati ? 'બિલિંગ વિગતો' : 'Billing Details'}
-          </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse border-2 border-black">
+        {/* Main Content Grid - Unified Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Billing Details - Takes 2 columns */}
+          <div className="lg:col-span-2">
+            <h2 className="text-xl font-bold mb-4 print:text-lg text-black">
+              {isGujarati ? 'બિલિંગ વિગતો' : 'Billing Details'}
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="border border-gray-300 p-3 text-left font-bold text-black w-16">
+                      {isGujarati ? 'ક્રમ' : 'Sr No'}
+                    </th>
+                    <th className="border border-gray-300 p-3 text-left font-bold text-black">
+                      {isGujarati ? gujaratiTerms.description : 'Description'}
+                    </th>
+                    <th className="border border-gray-300 p-3 text-center font-bold text-black w-24">
+                      {isGujarati ? gujaratiTerms.quantity : 'Qty'}
+                    </th>
+                    <th className="border border-gray-300 p-3 text-right font-bold text-black w-32">
+                      {isGujarati ? `${gujaratiTerms.rate} (₹)` : 'Rate (₹)'}
+                    </th>
+                    <th className="border border-gray-300 p-3 text-right font-bold text-black w-32">
+                      {isGujarati ? `${gujaratiTerms.total} (₹)` : 'Total (₹)'}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoice.items.map((item, index) => (
+                    <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <td className="border border-gray-300 p-3 text-center text-black font-medium">
+                        {isGujarati ? toGujaratiNumber(index + 1) : index + 1}
+                      </td>
+                      <td className="border border-gray-300 p-3 text-black">
+                        {isGujarati && item.gujarati_description ? item.gujarati_description : item.description}
+                      </td>
+                      <td className="border border-gray-300 p-3 text-center text-black font-medium">
+                        {formatQuantity(item.quantity)}
+                      </td>
+                      <td className="border border-gray-300 p-3 text-right text-black font-medium">
+                        {formatCurrency(item.rate)}
+                      </td>
+                      <td className="border border-gray-300 p-3 text-right text-black font-bold">
+                        {formatCurrency(item.total)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Amount Details - Single Unified Table */}
+          <div className="lg:col-span-1">
+            <h2 className="text-xl font-bold mb-4 print:text-lg text-black">
+              {isGujarati ? gujaratiTerms.summary : 'Amount Summary'}
+            </h2>
+            <table className="w-full border-collapse border border-gray-300">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="border-2 border-black p-4 text-left font-bold text-black w-16">
-                    {isGujarati ? 'ક્રમ' : 'Sr No'}
-                  </th>
-                  <th className="border-2 border-black p-4 text-left font-bold text-black">
-                    {isGujarati ? gujaratiTerms.description : 'Description'}
-                  </th>
-                  <th className="border-2 border-black p-4 text-center font-bold text-black w-24">
-                    {isGujarati ? gujaratiTerms.quantity : 'Qty'}
-                  </th>
-                  <th className="border-2 border-black p-4 text-right font-bold text-black w-32">
-                    {isGujarati ? `${gujaratiTerms.rate} (₹)` : 'Rate (₹)'}
-                  </th>
-                  <th className="border-2 border-black p-4 text-right font-bold text-black w-32">
-                    {isGujarati ? `${gujaratiTerms.total} (₹)` : 'Total (₹)'}
+                  <th className="border border-gray-300 p-3 text-left font-bold text-black" colspan="2">
+                    Amount Details
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {invoice.items.map((item, index) => (
-                  <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    <td className="border-2 border-black p-4 text-center text-black font-medium">
-                      {isGujarati ? toGujaratiNumber(index + 1) : index + 1}
+                <tr className="bg-white">
+                  <td className="border border-gray-300 p-3 text-black font-medium">
+                    {isGujarati ? 'GST વિના કુલ:' : 'Subtotal:'}
+                  </td>
+                  <td className="border border-gray-300 p-3 text-right text-black font-bold">
+                    {formatCurrency(invoice.subtotal)}
+                  </td>
+                </tr>
+                {showGst && (
+                  <tr className="bg-gray-50">
+                    <td className="border border-gray-300 p-3 text-black font-medium">
+                      {isGujarati ? `${gujaratiTerms.gst} (18%):` : 'GST (18%):'}
                     </td>
-                    <td className="border-2 border-black p-4 text-black">
-                      {isGujarati && item.gujarati_description ? item.gujarati_description : item.description}
-                    </td>
-                    <td className="border-2 border-black p-4 text-center text-black font-medium">
-                      {formatQuantity(item.quantity)}
-                    </td>
-                    <td className="border-2 border-black p-4 text-right text-black font-medium">
-                      {formatCurrency(item.rate)}
-                    </td>
-                    <td className="border-2 border-black p-4 text-right text-black font-bold">
-                      {formatCurrency(item.total)}
+                    <td className="border border-gray-300 p-3 text-right text-black font-bold">
+                      {formatCurrency(invoice.gst)}
                     </td>
                   </tr>
-                ))}
+                )}
+                <tr className="bg-gray-100">
+                  <td className="border border-gray-300 p-3 text-black font-bold text-lg">
+                    {isGujarati ? 'કુલ રકમ:' : 'Total Amount:'}
+                  </td>
+                  <td className="border border-gray-300 p-3 text-right text-black font-bold text-lg">
+                    {formatCurrency(invoice.total)}
+                  </td>
+                </tr>
               </tbody>
             </table>
-          </div>
-        </div>
-
-        <hr className="border-black border-t-2 mb-6" />
-
-        {/* Summary */}
-        <div className="mb-8">
-          <h2 className="text-xl font-bold mb-4 print:text-lg text-black">
-            {isGujarati ? gujaratiTerms.summary : 'Summary'}
-          </h2>
-          <div className="flex justify-end">
-            <div className="w-80 border-2 border-black">
-              <div className="bg-gray-100 border-b-2 border-black p-3">
-                <h3 className="font-bold text-black text-center">Amount Details</h3>
-              </div>
-              <div className="p-4 space-y-3">
-                <div className="flex justify-between py-2 border-b border-gray-300">
-                  <span className="text-black font-medium">{isGujarati ? 'GST વિના કુલ:' : 'Total without GST:'}</span>
-                  <span className="text-black font-bold">{formatCurrency(invoice.subtotal)}</span>
-                </div>
-                {showGst && (
-                  <div className="flex justify-between py-2 border-b border-gray-300">
-                    <span className="text-black font-medium">{isGujarati ? `${gujaratiTerms.gst} (18%):` : 'GST (18%):'}</span>
-                    <span className="text-black font-bold">{formatCurrency(invoice.gst)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between font-bold border-t-2 border-black pt-3 text-lg">
-                  <span className="text-black">
-                    {isGujarati ? 'કુલ રકમ:' : 'Total Amount:'}
-                  </span>
-                  <span className="text-black">{formatCurrency(invoice.total)}</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -241,7 +258,7 @@ const InvoicePreview = ({ invoice, isGujarati = false, template }: InvoicePrevie
         {/* Footer */}
         {footerEnabled && (
           <>
-            <hr className="border-black border-t-2 mb-4" />
+            <hr className="border-gray-300 border-t mb-4" />
             
             {footerDesign === 'simple' && (
               <div className={`${footerAlignmentClass} text-black pb-4`}>

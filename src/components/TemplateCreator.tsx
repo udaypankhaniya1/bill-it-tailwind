@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import TemplatePreview from '@/components/TemplatePreview';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Upload } from 'lucide-react';
+import { uploadLogo } from '@/utils/fileUpload';
 
 interface TemplateCreatorProps {
   initialTemplate?: any;
@@ -35,11 +36,12 @@ const TemplateCreator: React.FC<TemplateCreatorProps> = ({
     show_gst: true,
     show_contact: true,
     show_logo: true,
-    header_position: 'center' as 'left' | 'center' | 'right',
     footer_position: 'center' as 'left' | 'center' | 'right',
     footer_enabled: true,
+    footer_design: 'simple' as 'simple' | 'detailed' | 'minimal',
     watermark_text: '',
     watermark_enabled: false,
+    logo_url: '',
   });
 
   // Initialize form with existing template data
@@ -50,11 +52,12 @@ const TemplateCreator: React.FC<TemplateCreatorProps> = ({
         show_gst: initialTemplate.showGst ?? true,
         show_contact: initialTemplate.showContact ?? true,
         show_logo: initialTemplate.showLogo ?? true,
-        header_position: initialTemplate.headerPosition || 'center',
         footer_position: initialTemplate.footerPosition || 'center',
         footer_enabled: initialTemplate.footerEnabled ?? true,
+        footer_design: initialTemplate.footerDesign || 'simple',
         watermark_text: initialTemplate.watermarkText || '',
         watermark_enabled: initialTemplate.watermarkEnabled ?? false,
+        logo_url: initialTemplate.logoUrl || '',
       });
     }
   }, [initialTemplate]);
@@ -66,21 +69,48 @@ const TemplateCreator: React.FC<TemplateCreatorProps> = ({
     }));
   };
 
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const url = await uploadLogo(file);
+      if (url) {
+        handleInputChange('logo_url', url);
+        toast({
+          title: "Logo uploaded successfully",
+          description: "Your logo has been uploaded and will be used in the template.",
+        });
+      }
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      toast({
+        title: "Error uploading logo",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleWatermarkUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     setUploading(true);
     try {
-      // For now, we'll just store the file name as watermark text
-      // In a full implementation, you'd upload to storage and get a URL
-      handleInputChange('watermark_text', `[Image: ${file.name}]`);
-      handleInputChange('watermark_enabled', true);
-      
-      toast({
-        title: "Watermark uploaded",
-        description: "Your watermark has been set successfully.",
-      });
+      const url = await uploadLogo(file); // Reuse the same upload function
+      if (url) {
+        handleInputChange('watermark_text', `[Image: ${file.name}]`);
+        handleInputChange('watermark_enabled', true);
+        
+        toast({
+          title: "Watermark uploaded",
+          description: "Your watermark has been set successfully.",
+        });
+      }
     } catch (error) {
       console.error('Error uploading watermark:', error);
       toast({
@@ -113,7 +143,6 @@ const TemplateCreator: React.FC<TemplateCreatorProps> = ({
       font_size_header: 'text-2xl',
       font_size_body: 'text-base',
       font_size_footer: 'text-sm',
-      footer_design: 'simple'
     };
 
     onSave(templateData);
@@ -124,8 +153,8 @@ const TemplateCreator: React.FC<TemplateCreatorProps> = ({
     primaryColor: '#000000',
     secondaryColor: '#666666',
     tableColor: '#f8f9fa',
-    headerPosition: formData.header_position,
-    footerDesign: 'simple' as 'simple' | 'detailed' | 'minimal',
+    headerPosition: 'center', // Fixed position
+    footerDesign: formData.footer_design,
     footerPosition: formData.footer_position,
     footerEnabled: formData.footer_enabled,
     showGst: formData.show_gst,
@@ -133,7 +162,7 @@ const TemplateCreator: React.FC<TemplateCreatorProps> = ({
     showLogo: formData.show_logo,
     watermarkText: formData.watermark_text,
     watermarkEnabled: formData.watermark_enabled,
-    logoUrl: initialTemplate?.logoUrl
+    logoUrl: formData.logo_url
   };
 
   return (
@@ -173,22 +202,37 @@ const TemplateCreator: React.FC<TemplateCreatorProps> = ({
                 <Label htmlFor="show-logo">Show Logo</Label>
               </div>
 
-              <div>
-                <Label>Header Position</Label>
-                <Select 
-                  value={formData.header_position} 
-                  onValueChange={(value) => handleInputChange('header_position', value)}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="left">Left</SelectItem>
-                    <SelectItem value="center">Center</SelectItem>
-                    <SelectItem value="right">Right</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              {formData.show_logo && (
+                <div>
+                  <Label>Upload Logo</Label>
+                  <div className="mt-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      disabled={uploading}
+                      onClick={() => document.getElementById('logo-upload')?.click()}
+                    >
+                      {uploading ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <Upload className="h-4 w-4 mr-2" />
+                      )}
+                      {uploading ? 'Uploading...' : formData.logo_url ? 'Change Logo' : 'Upload Logo'}
+                    </Button>
+                    <input
+                      id="logo-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      className="hidden"
+                    />
+                    {formData.logo_url && (
+                      <p className="text-sm text-green-600 mt-1">Logo uploaded successfully</p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Content Settings */}
@@ -256,7 +300,7 @@ const TemplateCreator: React.FC<TemplateCreatorProps> = ({
                         ) : (
                           <Upload className="h-4 w-4 mr-2" />
                         )}
-                        {uploading ? 'Uploading...' : 'Upload Image'}
+                        {uploading ? 'Uploading...' : 'Upload Watermark Image'}
                       </Button>
                       <input
                         id="watermark-upload"
@@ -285,22 +329,41 @@ const TemplateCreator: React.FC<TemplateCreatorProps> = ({
               </div>
 
               {formData.footer_enabled && (
-                <div>
-                  <Label>Footer Position</Label>
-                  <Select 
-                    value={formData.footer_position} 
-                    onValueChange={(value) => handleInputChange('footer_position', value)}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="left">Left</SelectItem>
-                      <SelectItem value="center">Center</SelectItem>
-                      <SelectItem value="right">Right</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <>
+                  <div>
+                    <Label>Footer Design</Label>
+                    <Select 
+                      value={formData.footer_design} 
+                      onValueChange={(value) => handleInputChange('footer_design', value)}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="simple">Simple</SelectItem>
+                        <SelectItem value="detailed">Detailed</SelectItem>
+                        <SelectItem value="minimal">Minimal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label>Footer Position</Label>
+                    <Select 
+                      value={formData.footer_position} 
+                      onValueChange={(value) => handleInputChange('footer_position', value)}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="left">Left</SelectItem>
+                        <SelectItem value="center">Center</SelectItem>
+                        <SelectItem value="right">Right</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
               )}
             </div>
 
@@ -332,6 +395,7 @@ const TemplateCreator: React.FC<TemplateCreatorProps> = ({
           <TemplatePreview 
             invoice={previewInvoice}
             template={previewTemplate}
+            onLogoUpload={(url) => handleInputChange('logo_url', url)}
           />
         </CardContent>
       </Card>
