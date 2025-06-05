@@ -111,11 +111,11 @@ const InvoicePreview = ({
               </span>
               <span className="text-black ml-2">{invoice.invoiceNumber}</span>
             </div>
-            <div>
-              <span className="font-semibold text-black">
+            <div className="">
+              <span className="font-semibold text-black text-right">
                 {isGujarati ? gujaratiTerms.party : 'Party Name'}:
               </span>
-              <span className="text-black ml-2">{invoice.partyName}</span>
+              <span className="text-black ml-2 text-left font-normal text-base">{invoice.partyName}</span>
             </div>
             <div>
               <span className="font-semibold text-black">
