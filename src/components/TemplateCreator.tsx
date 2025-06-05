@@ -43,6 +43,10 @@ const TemplateCreator: React.FC<TemplateCreatorProps> = ({
     watermark_text: '',
     watermark_enabled: false,
     logo_url: '',
+    company_name: 'Sharda Mandap Service',
+    company_address: 'Porbandar Baypass, Jalaram Nagar, Mangrol, Dist. Junagadh - 362225',
+    company_mobile: '98246 86047',
+    company_gst_number: '24AOSPP7196L1ZX',
   });
 
   // Initialize form with existing template data
@@ -50,15 +54,19 @@ const TemplateCreator: React.FC<TemplateCreatorProps> = ({
     if (initialTemplate) {
       setFormData({
         name: initialTemplate.name || '',
-        show_gst: initialTemplate.showGst ?? true,
-        show_contact: initialTemplate.showContact ?? true,
-        show_logo: initialTemplate.showLogo ?? true,
-        footer_position: initialTemplate.footerPosition || 'center',
-        footer_enabled: initialTemplate.footerEnabled ?? true,
-        footer_design: initialTemplate.footerDesign || 'simple',
-        watermark_text: initialTemplate.watermarkText || '',
-        watermark_enabled: initialTemplate.watermarkEnabled ?? false,
-        logo_url: initialTemplate.logoUrl || '',
+        show_gst: initialTemplate.show_gst ?? true,
+        show_contact: initialTemplate.show_contact ?? true,
+        show_logo: initialTemplate.show_logo ?? true,
+        footer_position: initialTemplate.footer_position || 'center',
+        footer_enabled: initialTemplate.footer_enabled ?? true,
+        footer_design: initialTemplate.footer_design || 'simple',
+        watermark_text: initialTemplate.watermark_text || '',
+        watermark_enabled: initialTemplate.watermark_enabled ?? false,
+        logo_url: initialTemplate.logo_url || '',
+        company_name: initialTemplate.company_name || 'Sharda Mandap Service',
+        company_address: initialTemplate.company_address || 'Porbandar Baypass, Jalaram Nagar, Mangrol, Dist. Junagadh - 362225',
+        company_mobile: initialTemplate.company_mobile || '98246 86047',
+        company_gst_number: initialTemplate.company_gst_number || '24AOSPP7196L1ZX',
       });
     }
   }, [initialTemplate]);
@@ -154,7 +162,7 @@ const TemplateCreator: React.FC<TemplateCreatorProps> = ({
     primaryColor: '#000000',
     secondaryColor: '#666666',
     tableColor: '#f8f9fa',
-    headerPosition: 'center' as 'left' | 'center' | 'right', // Explicitly type this
+    headerPosition: 'center' as 'left' | 'center' | 'right',
     footerDesign: formData.footer_design,
     footerPosition: formData.footer_position,
     footerEnabled: formData.footer_enabled,
@@ -163,7 +171,11 @@ const TemplateCreator: React.FC<TemplateCreatorProps> = ({
     showLogo: formData.show_logo,
     watermarkText: formData.watermark_text,
     watermarkEnabled: formData.watermark_enabled,
-    logoUrl: formData.logo_url
+    logoUrl: formData.logo_url,
+    companyName: formData.company_name,
+    companyAddress: formData.company_address,
+    companyMobile: formData.company_mobile,
+    companyGstNumber: formData.company_gst_number
   };
 
   return (
@@ -188,6 +200,56 @@ const TemplateCreator: React.FC<TemplateCreatorProps> = ({
                 placeholder="Enter template name"
                 className="mt-1"
               />
+            </div>
+
+            {/* Company Details Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Company Details</h3>
+              
+              <div>
+                <Label htmlFor="company-name">Company Name</Label>
+                <Input
+                  id="company-name"
+                  value={formData.company_name}
+                  onChange={(e) => handleInputChange('company_name', e.target.value)}
+                  placeholder="Enter company name"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="company-address">Company Address</Label>
+                <Textarea
+                  id="company-address"
+                  value={formData.company_address}
+                  onChange={(e) => handleInputChange('company_address', e.target.value)}
+                  placeholder="Enter company address"
+                  className="mt-1"
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="company-mobile">Mobile Number</Label>
+                <Input
+                  id="company-mobile"
+                  value={formData.company_mobile}
+                  onChange={(e) => handleInputChange('company_mobile', e.target.value)}
+                  placeholder="Enter mobile number"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="company-gst">GST Number</Label>
+                <Input
+                  id="company-gst"
+                  value={formData.company_gst_number}
+                  onChange={(e) => handleInputChange('company_gst_number', e.target.value)}
+                  placeholder="Enter GST number"
+                  className="mt-1"
+                />
+              </div>
             </div>
 
             {/* Preview Document Title */}
