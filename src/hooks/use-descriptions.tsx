@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Description } from '@/components/DescriptionsList';
-import { fetchDescriptions } from '@/services/descriptionService';
+import { Description, fetchDescriptions } from '@/services/descriptionService';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useDescriptions = (searchTerm: string = '') => {

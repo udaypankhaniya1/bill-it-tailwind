@@ -3,8 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface Description {
   id: string;
-  english_description: string;
-  gujarati_description?: string;
+  english_text: string;
+  gujarati_text: string;
   created_at: string;
   updated_at: string;
 }
@@ -17,7 +17,7 @@ export const fetchDescriptions = async (searchTerm: string = ''): Promise<Descri
       .order('created_at', { ascending: false });
 
     if (searchTerm.trim()) {
-      query = query.or(`english_description.ilike.%${searchTerm}%,gujarati_description.ilike.%${searchTerm}%`);
+      query = query.or(`english_text.ilike.%${searchTerm}%,gujarati_text.ilike.%${searchTerm}%`);
     }
 
     const { data, error } = await query;
@@ -36,15 +36,15 @@ export const fetchDescriptions = async (searchTerm: string = ''): Promise<Descri
 };
 
 export const createDescription = async (
-  englishDescription: string,
-  gujaratiDescription?: string
+  englishText: string,
+  gujaratiText?: string
 ): Promise<Description> => {
   try {
     const { data, error } = await supabase
       .from('item_descriptions')
       .insert({
-        english_description: englishDescription,
-        gujarati_description: gujaratiDescription || null,
+        english_text: englishText,
+        gujarati_text: gujaratiText || null,
       })
       .select()
       .single();
@@ -63,15 +63,15 @@ export const createDescription = async (
 
 export const updateDescription = async (
   id: string,
-  englishDescription: string,
-  gujaratiDescription?: string
+  englishText: string,
+  gujaratiText?: string
 ): Promise<Description> => {
   try {
     const { data, error } = await supabase
       .from('item_descriptions')
       .update({
-        english_description: englishDescription,
-        gujarati_description: gujaratiDescription || null,
+        english_text: englishText,
+        gujarati_text: gujaratiText || null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
@@ -104,5 +104,17 @@ export const deleteDescription = async (id: string): Promise<void> => {
   } catch (error) {
     console.error('Error in deleteDescription:', error);
     throw error;
+  }
+};
+
+export const saveDescription = async (description: {
+  id?: string;
+  english_text: string;
+  gujarati_text: string;
+}): Promise<Description> => {
+  if (description.id) {
+    return updateDescription(description.id, description.english_text, description.gujarati_text);
+  } else {
+    return createDescription(description.english_text, description.gujarati_text);
   }
 };

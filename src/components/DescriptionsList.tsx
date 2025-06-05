@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { fetchDescriptions, deleteDescription } from '@/services/descriptionService';
+import { fetchDescriptions, deleteDescription, Description } from '@/services/descriptionService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -25,14 +25,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Edit, Trash, Plus, Search } from 'lucide-react';
 import EditDescriptionDialog from '@/components/EditDescriptionDialog';
-
-export type Description = {
-  id: string;
-  english_text: string;
-  gujarati_text: string;
-  created_at: string;
-  updated_at: string;
-}
 
 interface DescriptionsListProps {
   viewMode: string; // 'english' or 'gujarati'
