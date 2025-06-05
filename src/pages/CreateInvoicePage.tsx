@@ -1,50 +1,23 @@
+
 import { useState, useEffect } from 'react';
-import InvoiceEditor from '@/components/InvoiceEditor';
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { fetchTemplates, Template } from '@/services/templateService';
+import InvoiceEditor from '@/components/InvoiceEditor';
 import { useToast } from '@/hooks/use-toast';
-import { FileText, Settings } from 'lucide-react';
-import { Card } from '@/components/ui/card';
-import { getCurrentUserId } from '@/utils/supabaseClient';
+
 const CreateInvoicePage = () => {
-  const navigate = useNavigate();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+
   useEffect(() => {
     const loadTemplates = async () => {
       try {
         setIsLoading(true);
-
-        // Check if user is authenticated
-        const userId = await getCurrentUserId();
-        if (!userId) {
-          console.warn('No authenticated user found');
-          // Use default template if not authenticated
-          setTemplates([{
-            id: 'default',
-            name: 'Default Template',
-            primary_color: '#3B82F6',
-            secondary_color: '#64748B',
-            font_size_header: 'text-3xl',
-            font_size_body: 'text-base',
-            font_size_footer: 'text-sm',
-            show_gst: true,
-            show_contact: true,
-            show_logo: true,
-            header_position: 'center',
-            table_color: '#f8f9fa',
-            footer_design: 'simple'
-          }]);
-          return;
-        }
-        const data = await fetchTemplates();
-        if (data && data.length > 0) {
-          // Transform received data to ensure template properties have the correct types
-          const formattedTemplates = data.map(template => ({
+        const templatesData = await fetchTemplates();
+        
+        if (templatesData && templatesData.length > 0) {
+          const formattedTemplates = templatesData.map(template => ({
             id: template.id,
             name: template.name,
             primary_color: template.primary_color,
@@ -55,21 +28,24 @@ const CreateInvoicePage = () => {
             show_gst: template.show_gst,
             show_contact: template.show_contact,
             show_logo: template.show_logo,
-            // Cast header_position to the specific allowed types
             header_position: (template.header_position || 'center') as 'left' | 'center' | 'right',
             table_color: template.table_color || '#f8f9fa',
             footer_design: (template.footer_design || 'simple') as 'simple' | 'detailed' | 'minimal',
+            footer_position: (template.footer_position || 'center') as 'left' | 'center' | 'right',
+            footer_enabled: template.footer_enabled ?? true,
+            watermark_text: template.watermark_text || '',
+            watermark_enabled: template.watermark_enabled ?? false,
             logo_url: template.logo_url
           }));
           setTemplates(formattedTemplates);
         } else {
-          // If no templates, provide a default one
-          setTemplates([{
+          // Set default template if no templates found
+          const defaultTemplate: Template = {
             id: 'default',
             name: 'Default Template',
-            primary_color: '#3B82F6',
-            secondary_color: '#64748B',
-            font_size_header: 'text-3xl',
+            primary_color: '#000000',
+            secondary_color: '#666666',
+            font_size_header: 'text-2xl',
             font_size_body: 'text-base',
             font_size_footer: 'text-sm',
             show_gst: true,
@@ -77,23 +53,30 @@ const CreateInvoicePage = () => {
             show_logo: true,
             header_position: 'center',
             table_color: '#f8f9fa',
-            footer_design: 'simple'
-          }]);
+            footer_design: 'simple',
+            footer_position: 'center',
+            footer_enabled: true,
+            watermark_text: '',
+            watermark_enabled: false,
+            logo_url: ''
+          };
+          setTemplates([defaultTemplate]);
         }
       } catch (error) {
         console.error('Error loading templates:', error);
         toast({
           variant: "destructive",
           title: "Failed to load templates",
-          description: "Using default template settings"
+          description: "Using default template",
         });
-        // Set a default template if loading fails
-        setTemplates([{
+        
+        // Fallback to default template
+        const defaultTemplate: Template = {
           id: 'default',
           name: 'Default Template',
-          primary_color: '#3B82F6',
-          secondary_color: '#64748B',
-          font_size_header: 'text-3xl',
+          primary_color: '#000000',
+          secondary_color: '#666666',
+          font_size_header: 'text-2xl',
           font_size_body: 'text-base',
           font_size_footer: 'text-sm',
           show_gst: true,
@@ -101,35 +84,49 @@ const CreateInvoicePage = () => {
           show_logo: true,
           header_position: 'center',
           table_color: '#f8f9fa',
-          footer_design: 'simple'
-        }]);
+          footer_design: 'simple',
+          footer_position: 'center',
+          footer_enabled: true,
+          watermark_text: '',
+          watermark_enabled: false,
+          logo_url: ''
+        };
+        setTemplates([defaultTemplate]);
       } finally {
         setIsLoading(false);
       }
     };
+
     loadTemplates();
   }, [toast]);
-  return <div className="w-full my-0 px-[50px] mx-0">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-        <h2 className="text-2xl md:text-3xl font-bold">Create Invoice</h2>
-        <div className="flex flex-wrap gap-3">
-          <Button variant="outline" size="sm" onClick={() => navigate('/invoices')} className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            View All Invoices
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => navigate('/settings')} className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Manage Templates
-          </Button>
-        </div>
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Create New Invoice</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center h-32">
+              <p className="text-gray-500">Loading templates...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-6">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold">Create New Invoice</h1>
+        <p className="text-gray-600 mt-2">Fill in the details below to create a new invoice</p>
       </div>
       
-      {isLoading ? <Card className="p-8">
-          <div className="py-12 text-center">
-            <div className="w-16 h-16 border-4 border-t-blue-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-500">Loading templates...</p>
-          </div>
-        </Card> : <InvoiceEditor templates={templates} />}
-    </div>;
+      <InvoiceEditor templates={templates} />
+    </div>
+  );
 };
+
 export default CreateInvoicePage;

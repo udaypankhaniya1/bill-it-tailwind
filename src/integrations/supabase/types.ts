@@ -123,6 +123,8 @@ export type Database = {
           font_size_footer: string
           font_size_header: string
           footer_design: string | null
+          footer_enabled: boolean | null
+          footer_position: string | null
           header_position: string | null
           id: string
           logo_url: string | null
@@ -135,6 +137,8 @@ export type Database = {
           table_color: string | null
           updated_at: string
           user_id: string
+          watermark_enabled: boolean | null
+          watermark_text: string | null
         }
         Insert: {
           created_at?: string
@@ -142,6 +146,8 @@ export type Database = {
           font_size_footer?: string
           font_size_header?: string
           footer_design?: string | null
+          footer_enabled?: boolean | null
+          footer_position?: string | null
           header_position?: string | null
           id?: string
           logo_url?: string | null
@@ -154,6 +160,8 @@ export type Database = {
           table_color?: string | null
           updated_at?: string
           user_id: string
+          watermark_enabled?: boolean | null
+          watermark_text?: string | null
         }
         Update: {
           created_at?: string
@@ -161,6 +169,8 @@ export type Database = {
           font_size_footer?: string
           font_size_header?: string
           footer_design?: string | null
+          footer_enabled?: boolean | null
+          footer_position?: string | null
           header_position?: string | null
           id?: string
           logo_url?: string | null
@@ -173,6 +183,8 @@ export type Database = {
           table_color?: string | null
           updated_at?: string
           user_id?: string
+          watermark_enabled?: boolean | null
+          watermark_text?: string | null
         }
         Relationships: []
       }
