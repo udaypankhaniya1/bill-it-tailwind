@@ -105,7 +105,7 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
 
       <div className="relative z-10">
         <div className={`flex flex-col md:flex-row items-center gap-4 ${headerPosition === 'center' ? 'text-center justify-center' : headerPosition === 'right' ? 'text-right justify-end' : 'text-left justify-start'} mb-4 relative`}>
-          <div className="w-full md:w-auto">
+          <div className="w-full md:w-auto text-center">
             <h1 className="text-xl md:text-2xl font-bold mb-1 md:mb-2 text-black">{documentTitle}</h1>
             <p className="font-semibold mb-1 text-black">Sharda Mandap Service</p>
             <p className="text-xs mb-1 text-black">Porbandar Baypass, Jalaram Nagar, Mangrol</p>
