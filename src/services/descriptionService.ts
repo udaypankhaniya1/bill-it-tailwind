@@ -1,100 +1,108 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-export interface DescriptionData {
-  id?: string;
-  english_text: string;
-  gujarati_text: string;
+export interface Description {
+  id: string;
+  english_description: string;
+  gujarati_description?: string;
+  created_at: string;
+  updated_at: string;
 }
 
-// Fetch descriptions with optional search term
-export const fetchDescriptions = async (searchTerm: string = '') => {
-  let query = supabase
-    .from('item_descriptions')
-    .select('*')
-    .order('created_at', { ascending: false });
-    
-  // Add search filter if provided
-  if (searchTerm) {
-    query = query.or(`english_text.ilike.%${searchTerm}%,gujarati_text.ilike.%${searchTerm}%`);
-  }
-  
-  const { data, error } = await query;
-  
-  if (error) {
-    console.error('Error fetching descriptions:', error);
-    throw error;
-  }
-  
-  return data;
-};
-
-// Fetch a single description by ID
-export const fetchDescription = async (id: string) => {
-  const { data, error } = await supabase
-    .from('item_descriptions')
-    .select('*')
-    .eq('id', id)
-    .single();
-    
-  if (error) {
-    console.error('Error fetching description:', error);
-    throw error;
-  }
-  
-  return data;
-};
-
-// Save a description (create new or update existing)
-export const saveDescription = async (description: DescriptionData) => {
-  if (description.id) {
-    // Update existing
-    const { data, error } = await supabase
+export const fetchDescriptions = async (searchTerm: string = ''): Promise<Description[]> => {
+  try {
+    let query = supabase
       .from('item_descriptions')
-      .update({
-        english_text: description.english_text,
-        gujarati_text: description.gujarati_text,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', description.id)
-      .select();
-      
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (searchTerm.trim()) {
+      query = query.or(`english_description.ilike.%${searchTerm}%,gujarati_description.ilike.%${searchTerm}%`);
+    }
+
+    const { data, error } = await query;
+
     if (error) {
-      console.error('Error updating description:', error);
+      console.error('Error fetching descriptions:', error);
       throw error;
     }
-    
-    return data;
-  } else {
-    // Create new
+
+    // Return only user-added descriptions, no default items
+    return data || [];
+  } catch (error) {
+    console.error('Error in fetchDescriptions:', error);
+    throw error;
+  }
+};
+
+export const createDescription = async (
+  englishDescription: string,
+  gujaratiDescription?: string
+): Promise<Description> => {
+  try {
     const { data, error } = await supabase
       .from('item_descriptions')
       .insert({
-        english_text: description.english_text,
-        gujarati_text: description.gujarati_text
+        english_description: englishDescription,
+        gujarati_description: gujaratiDescription || null,
       })
-      .select();
-      
+      .select()
+      .single();
+
     if (error) {
       console.error('Error creating description:', error);
       throw error;
     }
-    
+
     return data;
+  } catch (error) {
+    console.error('Error in createDescription:', error);
+    throw error;
   }
 };
 
-// Delete a description
-export const deleteDescription = async (id: string) => {
-  const { error } = await supabase
-    .from('item_descriptions')
-    .delete()
-    .eq('id', id);
-    
-  if (error) {
-    console.error('Error deleting description:', error);
+export const updateDescription = async (
+  id: string,
+  englishDescription: string,
+  gujaratiDescription?: string
+): Promise<Description> => {
+  try {
+    const { data, error } = await supabase
+      .from('item_descriptions')
+      .update({
+        english_description: englishDescription,
+        gujarati_description: gujaratiDescription || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating description:', error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in updateDescription:', error);
     throw error;
   }
-  
-  return true;
+};
+
+export const deleteDescription = async (id: string): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('item_descriptions')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting description:', error);
+      throw error;
+    }
+  } catch (error) {
+    console.error('Error in deleteDescription:', error);
+    throw error;
+  }
 };

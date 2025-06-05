@@ -147,3 +147,84 @@
 .font-opensans {
   font-family: 'Open Sans', sans-serif;
 }
+
+/* Print styles for consistent PDF generation */
+@media print {
+  @page {
+    margin: 0.5in;
+    size: A4;
+  }
+  
+  body {
+    font-size: 12pt;
+    line-height: 1.4;
+    color: #000 !important;
+    background: white !important;
+  }
+  
+  .print\\:text-xs {
+    font-size: 10pt !important;
+  }
+  
+  .print\\:text-sm {
+    font-size: 11pt !important;
+  }
+  
+  .print\\:text-lg {
+    font-size: 14pt !important;
+  }
+  
+  .print\\:text-xl {
+    font-size: 16pt !important;
+  }
+  
+  .print\\:p-2 {
+    padding: 4pt !important;
+  }
+  
+  .print\\:p-6 {
+    padding: 12pt !important;
+  }
+  
+  .print\\:mb-2 {
+    margin-bottom: 4pt !important;
+  }
+  
+  .print\\:gap-4 {
+    gap: 8pt !important;
+  }
+  
+  .print\\:border-gray-600 {
+    border-color: #666 !important;
+  }
+  
+  .print\\:text-gray-800 {
+    color: #333 !important;
+  }
+  
+  .print\\:bg-gray-50 {
+    background-color: #f8f8f8 !important;
+  }
+  
+  .print\\:bg-gray-100 {
+    background-color: #f0f0f0 !important;
+  }
+  
+  .print\\:shadow-none {
+    box-shadow: none !important;
+  }
+  
+  .print\\:even\\:bg-gray-50:nth-child(even) {
+    background-color: #f8f8f8 !important;
+  }
+  
+  /* Ensure borders are visible in PDF */
+  table, th, td {
+    border: 1pt solid #333 !important;
+  }
+  
+  /* Hide non-essential elements during print/PDF generation */
+  button, .no-print {
+    display: none !important;
+  }
+}
