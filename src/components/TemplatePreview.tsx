@@ -175,15 +175,15 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
           {/* Simple Amount Details - Right Aligned Plain Text */}
           <div className="">
             <div className="">
-              <div className="text-black">
+              <div className="text-black text-right">
                 <span className="font-medium">Total without GST: </span>
                 <span className="font-bold">₹ {formatNumber(subtotal)}</span>
               </div>
-              {showGst && <div className="text-black">
+              {showGst && <div className="text-black text-right">
                   <span className="font-medium">GST (18%): </span>
                   <span className="font-bold">₹ {formatNumber(gst)}</span>
                 </div>}
-              <div className="text-black text-lg border-t pt-2">
+              <div className="text-black text-lg border-t pt-2 text-right">
                 <span className="font-semibold">Total Amount: </span>
                 <span className="font-bold">₹ {formatNumber(total)}</span>
               </div>
