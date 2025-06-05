@@ -29,6 +29,10 @@ const InvoiceViewPage = () => {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isGujarati, setIsGujarati] = useState(false);
   const [documentTitle, setDocumentTitle] = useState<'Bill' | 'Quotation'>('Quotation');
+  
+  // Add separate state for preview GST toggle
+  const [previewShowGst, setPreviewShowGst] = useState(true);
+  
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -52,6 +56,11 @@ const InvoiceViewPage = () => {
           updatedAt: invoiceData.updated_at || '',
         };
         setInvoice(transformedInvoice as any);
+
+        // Set preview GST based on whether invoice has GST calculated
+        // If invoice.gst is 0, it means GST was turned off during creation
+        const invoiceHasGst = invoiceData.gst > 0;
+        setPreviewShowGst(invoiceHasGst);
 
         // Load templates
         try {
@@ -522,7 +531,7 @@ const InvoiceViewPage = () => {
       </div>
 
       {/* Controls Panel */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
         {/* Document Title Toggle */}
         <div className="flex items-center space-x-2">
           <Settings className="h-4 w-4" />
@@ -588,6 +597,21 @@ const InvoiceViewPage = () => {
           )}
         </div>
 
+        {/* GST Preview Toggle */}
+        <div className="flex items-center space-x-2">
+          <Label htmlFor="gst-toggle" className="text-sm font-medium">
+            Show GST
+          </Label>
+          <Switch
+            id="gst-toggle"
+            checked={previewShowGst}
+            onCheckedChange={setPreviewShowGst}
+          />
+          <span className="text-xs text-gray-600">
+            {previewShowGst ? 'Showing' : 'Hidden'}
+          </span>
+        </div>
+
         {/* Language Toggle */}
         <div className="flex items-center space-x-2">
           <Languages className="h-4 w-4" />
@@ -612,7 +636,7 @@ const InvoiceViewPage = () => {
             isGujarati={isGujarati}
             documentTitle={documentTitle}
             template={{
-              showGst: selectedTemplate?.show_gst ?? true,
+              showGst: previewShowGst,
               showContact: selectedTemplate?.show_contact ?? true,
               showLogo: selectedTemplate?.show_logo ?? true,
               headerPosition: selectedTemplate?.header_position || 'center',
@@ -629,7 +653,7 @@ const InvoiceViewPage = () => {
             invoice={invoice as any} 
             documentTitle={documentTitle}
             template={{
-              showGst: selectedTemplate?.show_gst ?? true,
+              showGst: previewShowGst,
               showContact: selectedTemplate?.show_contact ?? true,
               showLogo: selectedTemplate?.show_logo ?? true,
               headerPosition: selectedTemplate?.header_position || 'center',

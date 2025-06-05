@@ -89,12 +89,12 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
     showLogo
   } = template;
 
-  // Calculate totals using fixed rates
+  // Calculate totals based on showGst setting
   const subtotal = invoice.items.reduce((sum, item) => sum + item.total, 0);
   const gst = showGst ? subtotal * 0.18 : 0;
   const total = subtotal + gst;
 
-  console.log('TemplatePreview render - showLogo:', showLogo, 'logoUrl:', template.logoUrl);
+  console.log('TemplatePreview render - showLogo:', showLogo, 'logoUrl:', template.logoUrl, 'showGst:', showGst);
 
   return (
     <div className="bg-white p-2 md:p-4 text-xs md:text-sm print:text-sm relative" style={{
@@ -122,7 +122,7 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
               <p className="font-semibold mb-1 text-black text-center">Sharda Mandap Service</p>
               <p className="text-xs mb-1 text-black text-center">Porbandar Baypass, Jalaram Nagar, Mangrol</p>
               
-              {/* GST info - centered below company info */}
+              {/* GST info - centered below company info - only show if showGst is true */}
               {showGst && (
                 <p className="text-xs mb-1 text-black text-center">
                   <span className="font-semibold">GST:</span> 24AOSPP7196L1ZX

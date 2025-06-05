@@ -48,7 +48,7 @@ const InvoicePreview = ({
   const showContact = template?.showContact ?? true;
   const showLogo = template?.showLogo ?? true;
   
-  console.log('InvoicePreview render - showLogo:', showLogo, 'logoUrl:', template?.logoUrl);
+  console.log('InvoicePreview render - showLogo:', showLogo, 'logoUrl:', template?.logoUrl, 'showGst:', showGst);
 
   const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -108,6 +108,11 @@ const InvoicePreview = ({
     right: 'text-right'
   }[footerPosition];
 
+  // Calculate totals based on showGst setting
+  const originalSubtotal = invoice.subtotal;
+  const calculatedGst = showGst ? originalSubtotal * 0.18 : 0;
+  const calculatedTotal = originalSubtotal + calculatedGst;
+
   return (
     <div className="w-full bg-white p-8 print:p-6 relative min-h-[297mm] flex flex-col">
       {/* Watermark */}
@@ -136,7 +141,7 @@ const InvoicePreview = ({
                 Porbandar Baypass, Jalaram Nagar, Mangrol, Dist. Junagadh - 362225
               </p>
               
-              {/* GST info - centered below company info */}
+              {/* GST info - centered below company info - only show if showGst is true */}
               {showGst && (
                 <p className="text-black mb-2 text-center">
                   <span className="font-medium">GST NO:</span> 24AOSPP7196L1ZX
@@ -286,21 +291,21 @@ const InvoicePreview = ({
                 <span className="font-medium">
                   {isGujarati ? 'GST વિના કુલ: ' : 'Total without GST: '}
                 </span>
-                <span className="font-bold">{formatCurrency(invoice.subtotal)}</span>
+                <span className="font-bold">{formatCurrency(originalSubtotal)}</span>
               </div>
               {showGst && (
                 <div className="text-black text-base">
                   <span className="font-medium">
                     {isGujarati ? `${gujaratiTerms.gst} (18%): ` : 'GST (18%): '}
                   </span>
-                  <span className="font-bold">{formatCurrency(invoice.gst)}</span>
+                  <span className="font-bold">{formatCurrency(calculatedGst)}</span>
                 </div>
               )}
               <div className="text-black text-lg border-t pt-3">
                 <span className="font-semibold">
                   {isGujarati ? 'કુલ રકમ: ' : 'Total Amount: '}
                 </span>
-                <span className="font-bold">{formatCurrency(invoice.total)}</span>
+                <span className="font-bold">{formatCurrency(calculatedTotal)}</span>
               </div>
             </div>
           </div>
