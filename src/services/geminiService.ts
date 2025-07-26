@@ -90,6 +90,8 @@ export const callGeminiAI = async (text: string, action: 'enhance' | 'translate'
     
     if (action === 'translate') {
       return { translatedText: response.data.translatedText };
+    } else if (action === 'multilang') {
+      return { translations: response.data.translations };
     } else {
       return { enhancedText: response.data.enhancedText };
     }
