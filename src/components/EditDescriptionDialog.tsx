@@ -205,7 +205,7 @@ const EditDescriptionDialog = ({
               id="english-text"
               ref={englishInputRef}
               value={englishText}
-              onChange={(e) => setEnglishText(e.target.value)}
+              onChange={(e) => handleTextChange('english', e.target.value)}
               placeholder="Enter description in English"
             />
           </div>
