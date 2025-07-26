@@ -94,6 +94,22 @@ Ensure all versions convey the same meaning but are culturally appropriate for t
           JSON.stringify({ translatedText: resultText }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
+      } else if (action === 'multilang') {
+        try {
+          const translations = JSON.parse(resultText);
+          return new Response(
+            JSON.stringify({ translations }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } catch (parseError) {
+          return new Response(
+            JSON.stringify({
+              error: 'Failed to parse multi-language response',
+              rawText: resultText
+            }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
       } else {
         return new Response(
           JSON.stringify({ enhancedText: resultText }),
