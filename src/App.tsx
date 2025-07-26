@@ -59,13 +59,55 @@ const App = () => {
         <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
         <Route path="/signup" element={user ? <Navigate to="/dashboard" replace /> : <Signup />} />
 
-        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-        <Route path="/invoices" element={<ProtectedRoute><InvoicesPage /></ProtectedRoute>} />
-        <Route path="/invoices/:id" element={<ProtectedRoute><InvoiceViewPage /></ProtectedRoute>} />
-        <Route path="/create-invoice" element={<ProtectedRoute><CreateInvoicePage /></ProtectedRoute>} />
-        <Route path="/descriptions" element={<ProtectedRoute><DescriptionsPage /></ProtectedRoute>} />
-        <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading dashboard...</div>}>
+              <DashboardPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/invoices" element={
+          <ProtectedRoute>
+            <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading invoices...</div>}>
+              <InvoicesPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/invoices/:id" element={
+          <ProtectedRoute>
+            <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading invoice...</div>}>
+              <InvoiceViewPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/create-invoice" element={
+          <ProtectedRoute>
+            <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading editor...</div>}>
+              <CreateInvoicePage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/descriptions" element={
+          <ProtectedRoute>
+            <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading descriptions...</div>}>
+              <DescriptionsPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading settings...</div>}>
+              <SettingsPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading profile...</div>}>
+              <ProfilePage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
 
         <Route path="*" element={<NotFound />} />
       </Routes>
