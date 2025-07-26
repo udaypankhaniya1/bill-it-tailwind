@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,7 +26,7 @@ import { Edit, Trash, Plus, Search } from 'lucide-react';
 import EditDescriptionDialog from '@/components/EditDescriptionDialog';
 
 interface DescriptionsListProps {
-  viewMode: string; // 'english' or 'gujarati'
+  viewMode: string; // 'english', 'gujarati', or 'ginlish'
 }
 
 const DescriptionsList = ({ viewMode }: DescriptionsListProps) => {
@@ -145,21 +144,22 @@ const DescriptionsList = ({ viewMode }: DescriptionsListProps) => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[300px]">English Text</TableHead>
-              <TableHead className="w-[300px]">Gujarati Text</TableHead>
+              <TableHead className="w-[250px]">English Text</TableHead>
+              <TableHead className="w-[250px]">Gujarati Text</TableHead>
+              <TableHead className="w-[250px]">Ginlish Text</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center py-8">
+                <TableCell colSpan={4} className="text-center py-8">
                   Loading descriptions...
                 </TableCell>
               </TableRow>
             ) : descriptions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center py-8">
+                <TableCell colSpan={4} className="text-center py-8">
                   No descriptions found. {searchTerm && "Try a different search term."}
                 </TableCell>
               </TableRow>
@@ -171,6 +171,9 @@ const DescriptionsList = ({ viewMode }: DescriptionsListProps) => {
                   </TableCell>
                   <TableCell className={viewMode === 'gujarati' ? 'font-gujarati' : ''}>
                     {desc.gujarati_text}
+                  </TableCell>
+                  <TableCell className={viewMode === 'ginlish' ? 'font-medium' : ''}>
+                    {desc.ginlish_text || ''}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
