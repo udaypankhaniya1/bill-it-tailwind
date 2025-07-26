@@ -32,6 +32,7 @@ const EditDescriptionDialog = ({
   const { translateTextWithAI } = useAIText();
   const [englishText, setEnglishText] = useState('');
   const [gujaratiText, setGujaratiText] = useState('');
+  const [ginlishText, setGinlishText] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const englishInputRef = useRef<HTMLInputElement>(null);
@@ -41,10 +42,12 @@ const EditDescriptionDialog = ({
     if (description) {
       setEnglishText(description.english_text);
       setGujaratiText(description.gujarati_text);
+      setGinlishText(description.ginlish_text || '');
     } else {
       // New description
       setEnglishText('');
       setGujaratiText('');
+      setGinlishText('');
     }
   }, [description]);
   
@@ -96,6 +99,7 @@ const EditDescriptionDialog = ({
         id: description?.id,
         english_text: englishText,
         gujarati_text: gujaratiText || englishText,
+        ginlish_text: ginlishText || englishText,
       });
       
       toast({
@@ -125,7 +129,7 @@ const EditDescriptionDialog = ({
         <DialogHeader>
           <DialogTitle>{description ? 'Edit Description' : 'Add New Description'}</DialogTitle>
           <DialogDescription>
-            Enter the description details below. You can use AI to help translate to Gujarati.
+            Enter the description details in English, Gujarati, and Ginlish (Gujarati + English). You can use AI to help translate to Gujarati.
           </DialogDescription>
         </DialogHeader>
         
@@ -162,6 +166,17 @@ const EditDescriptionDialog = ({
               onChange={(e) => setGujaratiText(e.target.value)}
               placeholder="Enter description in Gujarati"
               className="font-gujarati"
+              dir="auto"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="ginlish-text">Ginlish Text (Gujarati + English)</Label>
+            <Input
+              id="ginlish-text"
+              value={ginlishText}
+              onChange={(e) => setGinlishText(e.target.value)}
+              placeholder="Enter description in Ginlish (mixed Gujarati and English)"
               dir="auto"
             />
           </div>
