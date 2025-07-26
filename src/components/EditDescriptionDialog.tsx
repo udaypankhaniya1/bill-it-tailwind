@@ -210,17 +210,28 @@ const EditDescriptionDialog = ({
             />
           </div>
           
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={handleTranslate}
+              onClick={handleManualTranslate}
               disabled={!englishText.trim() || isTranslating}
             >
               {isTranslating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Translate to Gujarati
+              Generate All Languages
             </Button>
+
+            {!showAllFields && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAllFields(true)}
+              >
+                Show All Fields
+              </Button>
+            )}
           </div>
           
           <div className="space-y-2">
