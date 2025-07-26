@@ -194,7 +194,7 @@ const EditDescriptionDialog = ({
         <DialogHeader>
           <DialogTitle>{description ? 'Edit Description' : 'Add New Description'}</DialogTitle>
           <DialogDescription>
-            Enter the description details in English, Gujarati, and Ginlish (Gujarati + English). You can use AI to help translate to Gujarati.
+            Enter the description in any language. If you enter Gujarati text, all three language versions will be automatically generated.
           </DialogDescription>
         </DialogHeader>
         
