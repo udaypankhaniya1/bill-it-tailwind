@@ -17,6 +17,7 @@ import ProfilePage from '@/pages/ProfilePage';
 
 // Components
 import ProtectedRoute from '@/components/ProtectedRoute';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { Toaster } from '@/components/ui/toaster';
 
 // Utils
