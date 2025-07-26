@@ -19,7 +19,7 @@ export interface Invoice {
   subtotal: number;
   gst: number;
   total: number;
-  tags?: string[];
+
   created_at?: string;
   updated_at?: string;
   user_id?: string;
@@ -109,7 +109,6 @@ export const createInvoice = async (invoice: Omit<Invoice, 'id' | 'user_id'>) =>
       subtotal: invoice.subtotal,
       gst: invoice.gst,
       total: invoice.total,
-      tags: invoice.tags || [],
       user_id: user.id,
     });
 
