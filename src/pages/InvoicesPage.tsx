@@ -172,6 +172,7 @@ const InvoicesPage = () => {
                     <th className="text-left p-3">Invoice No</th>
                     <th className="text-left p-3">Party Name</th>
                     <th className="text-left p-3">Date</th>
+                    <th className="text-left p-3">Tags</th>
                     <th className="text-right p-3">Amount</th>
                     <th className="text-right p-3">Actions</th>
                   </tr>
