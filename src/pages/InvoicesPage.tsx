@@ -172,7 +172,7 @@ const InvoicesPage = () => {
                     <th className="text-left p-3">Invoice No</th>
                     <th className="text-left p-3">Party Name</th>
                     <th className="text-left p-3">Date</th>
-                    <th className="text-left p-3">Tags</th>
+
                     <th className="text-right p-3">Amount</th>
                     <th className="text-right p-3">Actions</th>
                   </tr>
@@ -185,11 +185,7 @@ const InvoicesPage = () => {
                       <td className="p-3">{invoice.date}</td>
                       <td className="p-3">
                         <div className="flex flex-wrap gap-1">
-                          {invoice.tags?.map((tag) => (
-                            <Badge key={tag} variant="secondary" className="text-xs">
-                              {tag}
-                            </Badge>
-                          )) || <span className="text-muted-foreground text-sm">No tags</span>}
+                      
                         </div>
                       </td>
                       <td className="text-right p-3">₹ {formatNumber(invoice.total)}</td>
