@@ -234,28 +234,35 @@ const EditDescriptionDialog = ({
             )}
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="gujarati-text">Gujarati Text</Label>
-            <Input
-              id="gujarati-text"
-              value={gujaratiText}
-              onChange={(e) => setGujaratiText(e.target.value)}
-              placeholder="Enter description in Gujarati"
-              className="font-gujarati"
-              dir="auto"
-            />
-          </div>
+          {showAllFields && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="gujarati-text">Gujarati Text</Label>
+                <Input
+                  id="gujarati-text"
+                  value={gujaratiText}
+                  onChange={(e) => handleTextChange('gujarati', e.target.value)}
+                  placeholder="ગુજરાતીમાં વર્ણન લખો"
+                  className="font-gujarati"
+                  dir="auto"
+                />
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="ginlish-text">Ginlish Text (Gujarati + English)</Label>
-            <Input
-              id="ginlish-text"
-              value={ginlishText}
-              onChange={(e) => setGinlishText(e.target.value)}
-              placeholder="Enter description in Ginlish (mixed Gujarati and English)"
-              dir="auto"
-            />
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="ginlish-text">Ginlish Text (Gujarati + English)</Label>
+                <Input
+                  id="ginlish-text"
+                  value={ginlishText}
+                  onChange={(e) => handleTextChange('ginlish', e.target.value)}
+                  placeholder="Mixed ગુજરાતી and English description"
+                  dir="auto"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Ginlish is a mix of Gujarati and English commonly used in Gujarat business
+                </p>
+              </div>
+            </>
+          )}
         </div>
         
         <DialogFooter>
