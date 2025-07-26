@@ -51,12 +51,12 @@ const App = () => {
   }
   
   return (
-    <>
+    <ErrorBoundary>
       <Routes>
         <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
         <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
         <Route path="/signup" element={user ? <Navigate to="/dashboard" replace /> : <Signup />} />
-        
+
         <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
         <Route path="/invoices" element={<ProtectedRoute><InvoicesPage /></ProtectedRoute>} />
         <Route path="/invoices/:id" element={<ProtectedRoute><InvoiceViewPage /></ProtectedRoute>} />
@@ -64,11 +64,11 @@ const App = () => {
         <Route path="/descriptions" element={<ProtectedRoute><DescriptionsPage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-        
+
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />
-    </>
+    </ErrorBoundary>
   );
 };
 
