@@ -1,11 +1,11 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
 export const generatePdfFromElement = async (
   elementId: string,
-  fileName: string
+  fileName: string,
+  template?: any
 ): Promise<{ pdf: jsPDF; dataUrl: string }> => {
   const element = document.getElementById(elementId);
   if (!element) {
