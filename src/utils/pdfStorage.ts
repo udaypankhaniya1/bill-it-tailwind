@@ -1,27 +1,50 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
 export const generatePdfFromElement = async (
   elementId: string,
-  fileName: string
+  fileName: string,
+  template?: any
 ): Promise<{ pdf: jsPDF; dataUrl: string }> => {
   const element = document.getElementById(elementId);
   if (!element) {
     throw new Error(`Element with ID ${elementId} not found`);
   }
 
+  // Temporarily apply print styles to ensure consistency
+  const originalStyles = {
+    width: element.style.width,
+    minHeight: element.style.minHeight,
+    padding: element.style.padding,
+    backgroundColor: element.style.backgroundColor,
+    fontSize: element.style.fontSize,
+    lineHeight: element.style.lineHeight
+  };
+
+  // Apply PDF-optimized styles
+  element.style.width = '210mm';
+  element.style.minHeight = '297mm';
+  element.style.padding = '20mm';
+  element.style.backgroundColor = '#ffffff';
+  element.style.fontSize = '12pt';
+  element.style.lineHeight = '1.4';
+
   // Create a canvas from the element with better options for A4
   const canvas = await html2canvas(element, {
-    scale: 2,
+    scale: 3, // Higher scale for better quality
     useCORS: true,
+    allowTaint: true,
+    backgroundColor: '#ffffff',
     logging: false,
     width: element.scrollWidth,
     height: element.scrollHeight,
-    windowWidth: 794, // A4 width in pixels at 96 DPI
-    windowHeight: 1123, // A4 height in pixels at 96 DPI
+    windowWidth: 1200,
+    windowHeight: 1600
   });
+
+  // Restore original styles
+  Object.assign(element.style, originalStyles);
   
   const imgData = canvas.toDataURL('image/png');
   

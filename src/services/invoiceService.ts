@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -20,6 +19,7 @@ export interface Invoice {
   subtotal: number;
   gst: number;
   total: number;
+  tags?: string[];
   created_at?: string;
   updated_at?: string;
   user_id?: string;
@@ -97,7 +97,7 @@ export const createInvoice = async (invoice: Omit<Invoice, 'id' | 'user_id'>) =>
   if (!user) throw new Error('Not authenticated');
 
   const newInvoiceId = uuidv4();
-  
+
   // Insert the invoice with the current user's ID
   const { error: invoiceError } = await supabase
     .from('invoices')
@@ -109,6 +109,7 @@ export const createInvoice = async (invoice: Omit<Invoice, 'id' | 'user_id'>) =>
       subtotal: invoice.subtotal,
       gst: invoice.gst,
       total: invoice.total,
+      tags: invoice.tags || [],
       user_id: user.id,
     });
 

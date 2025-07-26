@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { getCurrentUserId } from "@/utils/supabaseClient";
 
@@ -73,7 +72,7 @@ export const updateGeminiApiKey = async (apiKey: string): Promise<{ success: boo
   }
 };
 
-export const callGeminiAI = async (text: string, action: 'enhance' | 'translate' = 'enhance'): Promise<{ enhancedText?: string; translatedText?: string; error?: string }> => {
+export const callGeminiAI = async (text: string, action: 'enhance' | 'translate' | 'multilang' = 'enhance'): Promise<{ enhancedText?: string; translatedText?: string; translations?: any; error?: string }> => {
   try {
     const { api_key, error } = await getGeminiApiKey();
     
@@ -91,6 +90,8 @@ export const callGeminiAI = async (text: string, action: 'enhance' | 'translate'
     
     if (action === 'translate') {
       return { translatedText: response.data.translatedText };
+    } else if (action === 'multilang') {
+      return { translations: response.data.translations };
     } else {
       return { enhancedText: response.data.enhancedText };
     }

@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -32,10 +31,26 @@ serve(async (req) => {
 
     // Call Gemini API with different prompts based on action
     const url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
-    
+
     let prompt = '';
     if (action === 'translate') {
       prompt = `Translate the following English text into Gujarati. Return only the translation inside {{ }}, no explanation or additional text: "${text}"`;
+    } else if (action === 'multilang') {
+      prompt = `Given the following text: "${text}"
+
+Please provide three versions in JSON format:
+1. English version (clear, professional business language)
+2. Gujarati version (proper Gujarati script)
+3. Ginlish version (mixed Gujarati-English as commonly used in Gujarat business)
+
+Return only the JSON inside {{ }} with this exact format:
+{
+  "english": "...",
+  "gujarati": "...",
+  "ginlish": "..."
+}
+
+Ensure all versions convey the same meaning but are culturally appropriate for their respective contexts.`;
     } else {
       prompt = `Enhance the following text professionally while preserving its formatting (bold, italic, lists, headings, and code blocks). Return only the improved version inside {{ }}:\n\n"${text}"`;
     }
@@ -79,6 +94,22 @@ serve(async (req) => {
           JSON.stringify({ translatedText: resultText }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
+      } else if (action === 'multilang') {
+        try {
+          const translations = JSON.parse(resultText);
+          return new Response(
+            JSON.stringify({ translations }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } catch (parseError) {
+          return new Response(
+            JSON.stringify({
+              error: 'Failed to parse multi-language response',
+              rawText: resultText
+            }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
       } else {
         return new Response(
           JSON.stringify({ enhancedText: resultText }),

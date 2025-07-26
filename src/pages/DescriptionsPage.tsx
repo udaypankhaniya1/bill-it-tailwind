@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import DescriptionsList from '@/components/DescriptionsList';
@@ -21,6 +20,7 @@ const DescriptionsPage = () => {
         <TabsList>
           <TabsTrigger value="english">English</TabsTrigger>
           <TabsTrigger value="gujarati">Gujarati</TabsTrigger>
+          <TabsTrigger value="ginlish">Ginlish</TabsTrigger>
         </TabsList>
         
         <TabsContent value="english" className="space-y-4">
@@ -46,6 +46,22 @@ const DescriptionsPage = () => {
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
                   <span>Gujarati Descriptions</span>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DescriptionsList viewMode={activeTab} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="ginlish" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-md font-medium">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  <span>Ginlish Descriptions (Gujarati + English)</span>
                 </div>
               </CardTitle>
             </CardHeader>

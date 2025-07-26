@@ -1,6 +1,12 @@
-
 import { useToast } from "@/hooks/use-toast";
 import { callGeminiAI } from "@/services/geminiService";
+import { containsGujarati, detectLanguage } from "@/utils/languageDetection";
+
+interface MultiLanguageTranslation {
+  english: string;
+  gujarati: string;
+  ginlish: string;
+}
 
 /**
  * Hook to provide AI-powered text enhancement and translation functionality
@@ -61,10 +67,10 @@ export const useAIText = () => {
       });
       return null;
     }
-    
+
     try {
       const result = await callGeminiAI(text, 'translate');
-      
+
       if (result.error) {
         toast({
           variant: "destructive",
@@ -73,7 +79,7 @@ export const useAIText = () => {
         });
         return null;
       }
-      
+
       return result.translatedText || null;
     } catch (error: any) {
       console.error("Error translating text with AI:", error);
@@ -85,6 +91,63 @@ export const useAIText = () => {
       return null;
     }
   };
+
+  /**
+   * Generates all three language versions when Gujarati is detected
+   * @param text The input text (any language)
+   * @returns Object with English, Gujarati, and Ginlish versions
+   */
+  const generateMultiLanguageText = async (text: string): Promise<MultiLanguageTranslation | null> => {
+    if (!text) {
+      toast({
+        variant: "destructive",
+        title: "No text provided",
+        description: "Please enter text to generate translations."
+      });
+      return null;
+    }
+
+    try {
+      const language = detectLanguage(text);
+
+      const result = await callGeminiAI(text, 'multilang');
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      if (result.translations) {
+        return {
+          english: result.translations.english || text,
+          gujarati: result.translations.gujarati || text,
+          ginlish: result.translations.ginlish || text
+        };
+      } else {
+        // Fallback: use single translation
+        const gujaratiResult = await translateTextWithAI(text);
+        return {
+          english: language === 'english' ? text : text,
+          gujarati: gujaratiResult || text,
+          ginlish: `${text} (${gujaratiResult || text})`
+        };
+      }
+
+    } catch (error: any) {
+      console.error("Error generating multi-language text:", error);
+      toast({
+        variant: "destructive",
+        title: "Multi-language Generation Error",
+        description: "Failed to generate all language versions. Please try again."
+      });
+      return null;
+    }
+  };
   
-  return { enhanceTextWithAI, translateTextWithAI };
+  return {
+    enhanceTextWithAI,
+    translateTextWithAI,
+    generateMultiLanguageText,
+    detectLanguage: (text: string) => detectLanguage(text),
+    containsGujarati: (text: string) => containsGujarati(text)
+  };
 };

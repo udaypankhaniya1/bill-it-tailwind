@@ -29,11 +29,13 @@ const EditDescriptionDialog = ({
   onSave 
 }: EditDescriptionDialogProps) => {
   const { toast } = useToast();
-  const { translateTextWithAI } = useAIText();
+  const { translateTextWithAI, generateMultiLanguageText, containsGujarati } = useAIText();
   const [englishText, setEnglishText] = useState('');
   const [gujaratiText, setGujaratiText] = useState('');
+  const [ginlishText, setGinlishText] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showAllFields, setShowAllFields] = useState(false);
   const englishInputRef = useRef<HTMLInputElement>(null);
   
   // Initialize form with description data if editing
@@ -41,12 +43,23 @@ const EditDescriptionDialog = ({
     if (description) {
       setEnglishText(description.english_text);
       setGujaratiText(description.gujarati_text);
+      setGinlishText(description.ginlish_text || '');
+
+      // Show all fields if any field has content or contains Gujarati
+      const hasGujarati = containsGujarati(description.english_text) ||
+                         containsGujarati(description.gujarati_text) ||
+                         containsGujarati(description.ginlish_text || '');
+      const hasMultipleFields = description.gujarati_text || description.ginlish_text;
+
+      setShowAllFields(hasGujarati || hasMultipleFields);
     } else {
       // New description
       setEnglishText('');
       setGujaratiText('');
+      setGinlishText('');
+      setShowAllFields(false);
     }
-  }, [description]);
+  }, [description, containsGujarati]);
   
   // Focus the input when dialog opens
   useEffect(() => {
@@ -57,14 +70,69 @@ const EditDescriptionDialog = ({
     }
   }, [open]);
 
-  const handleTranslate = async () => {
-    if (!englishText.trim()) return;
-    
+  // Auto-detect language and show all fields when needed
+  const handleTextChange = (field: 'english' | 'gujarati' | 'ginlish', value: string) => {
+    switch (field) {
+      case 'english':
+        setEnglishText(value);
+        break;
+      case 'gujarati':
+        setGujaratiText(value);
+        break;
+      case 'ginlish':
+        setGinlishText(value);
+        break;
+    }
+
+    // Auto-detect if we should show all fields
+    if (containsGujarati(value) && !showAllFields) {
+      setShowAllFields(true);
+      // Auto-generate other translations
+      handleAutoTranslate(value);
+    }
+  };
+
+  const handleAutoTranslate = async (inputText: string) => {
+    if (!inputText.trim() || !containsGujarati(inputText)) return;
+
     setIsTranslating(true);
     try {
-      const translatedText = await translateTextWithAI(englishText);
-      if (translatedText) {
-        setGujaratiText(translatedText);
+      const translations = await generateMultiLanguageText(inputText);
+      if (translations) {
+        // Only update empty fields to avoid overwriting user input
+        if (!englishText.trim()) setEnglishText(translations.english);
+        if (!gujaratiText.trim()) setGujaratiText(translations.gujarati);
+        if (!ginlishText.trim()) setGinlishText(translations.ginlish);
+
+        toast({
+          title: 'Auto-translations generated',
+          description: 'All three language versions have been created. You can edit them as needed.',
+        });
+      }
+    } catch (error: any) {
+      console.error('Auto-translation error:', error);
+      // Don't show error for auto-translation, just fail silently
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
+  const handleManualTranslate = async () => {
+    if (!englishText.trim()) return;
+
+    setIsTranslating(true);
+    setShowAllFields(true);
+
+    try {
+      const translations = await generateMultiLanguageText(englishText);
+      if (translations) {
+        setGujaratiText(translations.gujarati);
+        setGinlishText(translations.ginlish);
+
+        toast({
+          title: 'Translations generated',
+          description: 'Gujarati and Ginlish versions have been created.',
+        });
       } else {
         throw new Error('Translation failed');
       }
@@ -73,7 +141,7 @@ const EditDescriptionDialog = ({
       toast({
         variant: 'destructive',
         title: 'Translation failed',
-        description: error.message || 'There was a problem translating the text',
+        description: error.message || 'There was a problem generating translations',
       });
     } finally {
       setIsTranslating(false);
@@ -96,6 +164,7 @@ const EditDescriptionDialog = ({
         id: description?.id,
         english_text: englishText,
         gujarati_text: gujaratiText || englishText,
+        ginlish_text: ginlishText || englishText,
       });
       
       toast({
@@ -125,7 +194,7 @@ const EditDescriptionDialog = ({
         <DialogHeader>
           <DialogTitle>{description ? 'Edit Description' : 'Add New Description'}</DialogTitle>
           <DialogDescription>
-            Enter the description details below. You can use AI to help translate to Gujarati.
+            Enter the description in any language. If you enter Gujarati text, all three language versions will be automatically generated.
           </DialogDescription>
         </DialogHeader>
         
@@ -136,35 +205,64 @@ const EditDescriptionDialog = ({
               id="english-text"
               ref={englishInputRef}
               value={englishText}
-              onChange={(e) => setEnglishText(e.target.value)}
+              onChange={(e) => handleTextChange('english', e.target.value)}
               placeholder="Enter description in English"
             />
           </div>
           
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={handleTranslate}
+              onClick={handleManualTranslate}
               disabled={!englishText.trim() || isTranslating}
             >
               {isTranslating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Translate to Gujarati
+              Generate All Languages
             </Button>
+
+            {!showAllFields && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAllFields(true)}
+              >
+                Show All Fields
+              </Button>
+            )}
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="gujarati-text">Gujarati Text</Label>
-            <Input
-              id="gujarati-text"
-              value={gujaratiText}
-              onChange={(e) => setGujaratiText(e.target.value)}
-              placeholder="Enter description in Gujarati"
-              className="font-gujarati"
-              dir="auto"
-            />
-          </div>
+          {showAllFields && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="gujarati-text">Gujarati Text</Label>
+                <Input
+                  id="gujarati-text"
+                  value={gujaratiText}
+                  onChange={(e) => handleTextChange('gujarati', e.target.value)}
+                  placeholder="ગુજરાતીમાં વર્ણન લખો"
+                  className="font-gujarati"
+                  dir="auto"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="ginlish-text">Ginlish Text (Gujarati + English)</Label>
+                <Input
+                  id="ginlish-text"
+                  value={ginlishText}
+                  onChange={(e) => handleTextChange('ginlish', e.target.value)}
+                  placeholder="Mixed ગુજરાતી and English description"
+                  dir="auto"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Ginlish is a mix of Gujarati and English commonly used in Gujarat business
+                </p>
+              </div>
+            </>
+          )}
         </div>
         
         <DialogFooter>

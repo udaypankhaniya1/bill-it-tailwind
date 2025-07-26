@@ -1,22 +1,25 @@
-import { useEffect } from 'react';
+import { useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 
-// Pages
-import DashboardPage from '@/pages/DashboardPage';
-import InvoicesPage from '@/pages/InvoicesPage';
-import InvoiceViewPage from '@/pages/InvoiceViewPage';
-import CreateInvoicePage from '@/pages/CreateInvoicePage';
-import SettingsPage from '@/pages/SettingsPage';
-import DescriptionsPage from '@/pages/DescriptionsPage';
+// Lazy load pages for better performance
+const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
+const InvoicesPage = lazy(() => import('@/pages/InvoicesPage'));
+const InvoiceViewPage = lazy(() => import('@/pages/InvoiceViewPage'));
+const CreateInvoicePage = lazy(() => import('@/pages/CreateInvoicePage'));
+const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
+const DescriptionsPage = lazy(() => import('@/pages/DescriptionsPage'));
+const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
+
+// Auth pages - not lazy loaded for faster initial access
 import Login from '@/pages/Login';
 import Signup from '@/pages/Signup';
 import NotFound from '@/pages/NotFound';
-import ProfilePage from '@/pages/ProfilePage';
 
 // Components
 import ProtectedRoute from '@/components/ProtectedRoute';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { Toaster } from '@/components/ui/toaster';
 
 // Utils
@@ -50,24 +53,66 @@ const App = () => {
   }
   
   return (
-    <>
+    <ErrorBoundary>
       <Routes>
         <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
         <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
         <Route path="/signup" element={user ? <Navigate to="/dashboard" replace /> : <Signup />} />
-        
-        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-        <Route path="/invoices" element={<ProtectedRoute><InvoicesPage /></ProtectedRoute>} />
-        <Route path="/invoices/:id" element={<ProtectedRoute><InvoiceViewPage /></ProtectedRoute>} />
-        <Route path="/create-invoice" element={<ProtectedRoute><CreateInvoicePage /></ProtectedRoute>} />
-        <Route path="/descriptions" element={<ProtectedRoute><DescriptionsPage /></ProtectedRoute>} />
-        <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-        
+
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading dashboard...</div>}>
+              <DashboardPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/invoices" element={
+          <ProtectedRoute>
+            <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading invoices...</div>}>
+              <InvoicesPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/invoices/:id" element={
+          <ProtectedRoute>
+            <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading invoice...</div>}>
+              <InvoiceViewPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/create-invoice" element={
+          <ProtectedRoute>
+            <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading editor...</div>}>
+              <CreateInvoicePage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/descriptions" element={
+          <ProtectedRoute>
+            <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading descriptions...</div>}>
+              <DescriptionsPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading settings...</div>}>
+              <SettingsPage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading profile...</div>}>
+              <ProfilePage />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />
-    </>
+    </ErrorBoundary>
   );
 };
 
