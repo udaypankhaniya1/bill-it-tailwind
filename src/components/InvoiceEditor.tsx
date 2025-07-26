@@ -67,6 +67,14 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
   const [partyName, setPartyName] = useState("Gulab Oil");
   const [invoiceDate, setInvoiceDate] = useState("2025-04-23");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [tags, setTags] = useState<string[]>([]);
+
+  // Common tag suggestions
+  const tagSuggestions = [
+    "urgent", "paid", "pending", "overdue", "recurring", "wholesale", "retail",
+    "construction", "service", "materials", "labor", "equipment", "rental",
+    "maintenance", "repair", "installation", "delivery", "transport"
+  ];
   
   // Invoice items state
   const [items, setItems] = useState<InvoiceItem[]>([
@@ -352,7 +360,7 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
           </h2>
           <Button variant="outline" size="sm" onClick={addNewItem}>
             <Plus className="h-4 w-4 mr-2" />
-            {useGujarati ? "આઇટમ ઉમ���રો" : "Add Item"}
+            {useGujarati ? "આઇટમ ઉમેરો" : "Add Item"}
           </Button>
         </div>
         
