@@ -1,19 +1,21 @@
-import { useEffect } from 'react';
+import { useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 
-// Pages
-import DashboardPage from '@/pages/DashboardPage';
-import InvoicesPage from '@/pages/InvoicesPage';
-import InvoiceViewPage from '@/pages/InvoiceViewPage';
-import CreateInvoicePage from '@/pages/CreateInvoicePage';
-import SettingsPage from '@/pages/SettingsPage';
-import DescriptionsPage from '@/pages/DescriptionsPage';
+// Lazy load pages for better performance
+const DashboardPage = lazy(() => import('@/pages/DashboardPage'));
+const InvoicesPage = lazy(() => import('@/pages/InvoicesPage'));
+const InvoiceViewPage = lazy(() => import('@/pages/InvoiceViewPage'));
+const CreateInvoicePage = lazy(() => import('@/pages/CreateInvoicePage'));
+const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
+const DescriptionsPage = lazy(() => import('@/pages/DescriptionsPage'));
+const ProfilePage = lazy(() => import('@/pages/ProfilePage'));
+
+// Auth pages - not lazy loaded for faster initial access
 import Login from '@/pages/Login';
 import Signup from '@/pages/Signup';
 import NotFound from '@/pages/NotFound';
-import ProfilePage from '@/pages/ProfilePage';
 
 // Components
 import ProtectedRoute from '@/components/ProtectedRoute';
