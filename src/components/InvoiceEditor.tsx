@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -29,6 +28,7 @@ import { useNavigate } from "react-router-dom";
 import { createInvoice } from "@/services/invoiceService";
 import { Template } from "@/services/templateService";
 import DescriptionField from "@/components/DescriptionField";
+import TagsInput from "@/components/TagsInput";
 
 interface InvoiceItem {
   id: string;
@@ -352,7 +352,7 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
           </h2>
           <Button variant="outline" size="sm" onClick={addNewItem}>
             <Plus className="h-4 w-4 mr-2" />
-            {useGujarati ? "આઇટમ ઉમેરો" : "Add Item"}
+            {useGujarati ? "આઇટમ ઉમ���રો" : "Add Item"}
           </Button>
         </div>
         
