@@ -70,14 +70,69 @@ const EditDescriptionDialog = ({
     }
   }, [open]);
 
-  const handleTranslate = async () => {
-    if (!englishText.trim()) return;
-    
+  // Auto-detect language and show all fields when needed
+  const handleTextChange = (field: 'english' | 'gujarati' | 'ginlish', value: string) => {
+    switch (field) {
+      case 'english':
+        setEnglishText(value);
+        break;
+      case 'gujarati':
+        setGujaratiText(value);
+        break;
+      case 'ginlish':
+        setGinlishText(value);
+        break;
+    }
+
+    // Auto-detect if we should show all fields
+    if (containsGujarati(value) && !showAllFields) {
+      setShowAllFields(true);
+      // Auto-generate other translations
+      handleAutoTranslate(value);
+    }
+  };
+
+  const handleAutoTranslate = async (inputText: string) => {
+    if (!inputText.trim() || !containsGujarati(inputText)) return;
+
     setIsTranslating(true);
     try {
-      const translatedText = await translateTextWithAI(englishText);
-      if (translatedText) {
-        setGujaratiText(translatedText);
+      const translations = await generateMultiLanguageText(inputText);
+      if (translations) {
+        // Only update empty fields to avoid overwriting user input
+        if (!englishText.trim()) setEnglishText(translations.english);
+        if (!gujaratiText.trim()) setGujaratiText(translations.gujarati);
+        if (!ginlishText.trim()) setGinlishText(translations.ginlish);
+
+        toast({
+          title: 'Auto-translations generated',
+          description: 'All three language versions have been created. You can edit them as needed.',
+        });
+      }
+    } catch (error: any) {
+      console.error('Auto-translation error:', error);
+      // Don't show error for auto-translation, just fail silently
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
+  const handleManualTranslate = async () => {
+    if (!englishText.trim()) return;
+
+    setIsTranslating(true);
+    setShowAllFields(true);
+
+    try {
+      const translations = await generateMultiLanguageText(englishText);
+      if (translations) {
+        setGujaratiText(translations.gujarati);
+        setGinlishText(translations.ginlish);
+
+        toast({
+          title: 'Translations generated',
+          description: 'Gujarati and Ginlish versions have been created.',
+        });
       } else {
         throw new Error('Translation failed');
       }
@@ -86,7 +141,7 @@ const EditDescriptionDialog = ({
       toast({
         variant: 'destructive',
         title: 'Translation failed',
-        description: error.message || 'There was a problem translating the text',
+        description: error.message || 'There was a problem generating translations',
       });
     } finally {
       setIsTranslating(false);
