@@ -206,7 +206,8 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
         })),
         subtotal,
         gst,
-        total
+        total,
+        tags
       };
 
       await createInvoice(invoiceData);
@@ -312,7 +313,7 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
         
         <hr className="my-4" />
         
-        <h2 className="text-xl font-semibold mb-2">{useGujarati ? "બિલ વિગતો" : "Invoice Details"}</h2>
+        <h2 className="text-xl font-semibold mb-2">{useGujarati ? "બિ�� વિગતો" : "Invoice Details"}</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
