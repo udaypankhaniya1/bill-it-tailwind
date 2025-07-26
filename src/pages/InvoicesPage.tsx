@@ -183,6 +183,15 @@ const InvoicesPage = () => {
                       <td className="p-3">{invoice.invoice_number}</td>
                       <td className="p-3">{invoice.party_name}</td>
                       <td className="p-3">{invoice.date}</td>
+                      <td className="p-3">
+                        <div className="flex flex-wrap gap-1">
+                          {invoice.tags?.map((tag) => (
+                            <Badge key={tag} variant="secondary" className="text-xs">
+                              {tag}
+                            </Badge>
+                          )) || <span className="text-muted-foreground text-sm">No tags</span>}
+                        </div>
+                      </td>
                       <td className="text-right p-3">₹ {formatNumber(invoice.total)}</td>
                       <td className="text-right p-3 flex justify-end gap-2">
                         <Button
