@@ -44,13 +44,22 @@ const EditDescriptionDialog = ({
       setEnglishText(description.english_text);
       setGujaratiText(description.gujarati_text);
       setGinlishText(description.ginlish_text || '');
+
+      // Show all fields if any field has content or contains Gujarati
+      const hasGujarati = containsGujarati(description.english_text) ||
+                         containsGujarati(description.gujarati_text) ||
+                         containsGujarati(description.ginlish_text || '');
+      const hasMultipleFields = description.gujarati_text || description.ginlish_text;
+
+      setShowAllFields(hasGujarati || hasMultipleFields);
     } else {
       // New description
       setEnglishText('');
       setGujaratiText('');
       setGinlishText('');
+      setShowAllFields(false);
     }
-  }, [description]);
+  }, [description, containsGujarati]);
   
   // Focus the input when dialog opens
   useEffect(() => {
