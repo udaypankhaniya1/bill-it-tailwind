@@ -28,7 +28,7 @@ import { useNavigate } from "react-router-dom";
 import { createInvoice } from "@/services/invoiceService";
 import { Template } from "@/services/templateService";
 import DescriptionField from "@/components/DescriptionField";
-import TagsInput from "@/components/TagsInput";
+
 
 interface InvoiceItem {
   id: string;
@@ -67,35 +67,10 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
   const [partyName, setPartyName] = useState("Gulab Oil");
   const [invoiceDate, setInvoiceDate] = useState("2025-04-23");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [tags, setTags] = useState<string[]>([]);
 
-  // Common tag suggestions
-  const tagSuggestions = [
-    "urgent", "paid", "pending", "overdue", "recurring", "wholesale", "retail",
-    "construction", "service", "materials", "labor", "equipment", "rental",
-    "maintenance", "repair", "installation", "delivery", "transport"
-  ];
-  
   // Invoice items state
   const [items, setItems] = useState<InvoiceItem[]>([
-    {
-      id: uuidv4(),
-      description: "મેન ગેટ",
-      gujarati_description: "મેન ગેટ",
-      quantity: 2,
-      unit: "pcs",
-      rate: 7000,
-      total: 14000
-    },
-    {
-      id: uuidv4(),
-      description: "Dom (sft)",
-      gujarati_description: "ડોમ (સ્ક્વેર ફૂટ)",
-      quantity: 4950,
-      unit: "sft",
-      rate: 33.33,
-      total: 165000
-    }
+
   ]);
 
   // Update template when changed
@@ -207,7 +182,7 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
         subtotal,
         gst,
         total,
-        tags
+        
       };
 
       await createInvoice(invoiceData);
@@ -353,22 +328,7 @@ const InvoiceEditor = ({ templates, onSave, initialContent }: InvoiceEditorProps
           </div>
         </div>
 
-        <div className="mb-4">
-          <Label className="block mb-2">
-            {useGujarati ? "ટેગ્સ:" : "Tags:"}
-          </Label>
-          <TagsInput
-            tags={tags}
-            onTagsChange={setTags}
-            suggestions={tagSuggestions}
-            placeholder={useGujarati ? "ટેગ્સ ઉમેરો..." : "Add tags..."}
-            className="max-w-lg"
-          />
-          <p className="text-sm text-muted-foreground mt-1">
-            {useGujarati ? "ટેગ્સ વડે તમે તમારા બિલોને સરળતાથી વર્ગીકૃત અને શોધી શકો છો" : "Use tags to categorize and easily find your invoices"}
-          </p>
-        </div>
-
+    
         <hr className="my-4" />
 
         <div className="flex items-center justify-between mb-4">
