@@ -1,10 +1,10 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Description {
   id: string;
   english_text: string;
   gujarati_text: string;
+  ginlish_text: string;
   created_at: string;
   updated_at: string;
 }
@@ -17,7 +17,7 @@ export const fetchDescriptions = async (searchTerm: string = ''): Promise<Descri
       .order('created_at', { ascending: false });
 
     if (searchTerm.trim()) {
-      query = query.or(`english_text.ilike.%${searchTerm}%,gujarati_text.ilike.%${searchTerm}%`);
+      query = query.or(`english_text.ilike.%${searchTerm}%,gujarati_text.ilike.%${searchTerm}%,ginlish_text.ilike.%${searchTerm}%`);
     }
 
     const { data, error } = await query;
@@ -37,7 +37,8 @@ export const fetchDescriptions = async (searchTerm: string = ''): Promise<Descri
 
 export const createDescription = async (
   englishText: string,
-  gujaratiText?: string
+  gujaratiText?: string,
+  ginlishText?: string
 ): Promise<Description> => {
   try {
     const { data, error } = await supabase
@@ -45,6 +46,7 @@ export const createDescription = async (
       .insert({
         english_text: englishText,
         gujarati_text: gujaratiText || null,
+        ginlish_text: ginlishText || null,
       })
       .select()
       .single();
@@ -64,7 +66,8 @@ export const createDescription = async (
 export const updateDescription = async (
   id: string,
   englishText: string,
-  gujaratiText?: string
+  gujaratiText?: string,
+  ginlishText?: string
 ): Promise<Description> => {
   try {
     const { data, error } = await supabase
@@ -72,6 +75,7 @@ export const updateDescription = async (
       .update({
         english_text: englishText,
         gujarati_text: gujaratiText || null,
+        ginlish_text: ginlishText || null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
@@ -111,10 +115,11 @@ export const saveDescription = async (description: {
   id?: string;
   english_text: string;
   gujarati_text: string;
+  ginlish_text: string;
 }): Promise<Description> => {
   if (description.id) {
-    return updateDescription(description.id, description.english_text, description.gujarati_text);
+    return updateDescription(description.id, description.english_text, description.gujarati_text, description.ginlish_text);
   } else {
-    return createDescription(description.english_text, description.gujarati_text);
+    return createDescription(description.english_text, description.gujarati_text, description.ginlish_text);
   }
 };
