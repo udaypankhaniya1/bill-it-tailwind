@@ -110,69 +110,25 @@ export const useAIText = () => {
     try {
       const language = detectLanguage(text);
 
-      // Create enhanced prompt for multi-language generation
-      const prompt = `Given the following text: "${text}"
+      const result = await callGeminiAI(text, 'multilang');
 
-Language detected: ${language}
-
-Please provide three versions:
-1. English version (clear, professional business language)
-2. Gujarati version (proper Gujarati script)
-3. Ginlish version (mixed Gujarati-English as commonly used in Gujarat business)
-
-Format the response as JSON:
-{
-  "english": "...",
-  "gujarati": "...",
-  "ginlish": "..."
-}
-
-Ensure all versions convey the same meaning but are culturally appropriate for their respective contexts.`;
-
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: prompt }]
-          }],
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 1024,
-          }
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate translations');
+      if (result.error) {
+        throw new Error(result.error);
       }
 
-      const data = await response.json();
-      const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-      if (!generatedText) {
-        throw new Error('No response from AI');
-      }
-
-      // Try to parse JSON response
-      try {
-        const translations = JSON.parse(generatedText.replace(/```json\n?|```/g, ''));
+      if (result.translations) {
         return {
-          english: translations.english || text,
-          gujarati: translations.gujarati || text,
-          ginlish: translations.ginlish || text
+          english: result.translations.english || text,
+          gujarati: result.translations.gujarati || text,
+          ginlish: result.translations.ginlish || text
         };
-      } catch (parseError) {
+      } else {
         // Fallback: use single translation
         const gujaratiResult = await translateTextWithAI(text);
         return {
-          english: language === 'english' ? text : text, // Keep original if not English
+          english: language === 'english' ? text : text,
           gujarati: gujaratiResult || text,
-          ginlish: `${text} (${gujaratiResult || text})` // Simple mix
+          ginlish: `${text} (${gujaratiResult || text})`
         };
       }
 
