@@ -29,12 +29,13 @@ const EditDescriptionDialog = ({
   onSave 
 }: EditDescriptionDialogProps) => {
   const { toast } = useToast();
-  const { translateTextWithAI } = useAIText();
+  const { translateTextWithAI, generateMultiLanguageText, containsGujarati } = useAIText();
   const [englishText, setEnglishText] = useState('');
   const [gujaratiText, setGujaratiText] = useState('');
   const [ginlishText, setGinlishText] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showAllFields, setShowAllFields] = useState(false);
   const englishInputRef = useRef<HTMLInputElement>(null);
   
   // Initialize form with description data if editing
