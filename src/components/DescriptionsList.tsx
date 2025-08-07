@@ -23,7 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Edit, Trash, Plus, Search } from 'lucide-react';
-import EditDescriptionDialog from '@/components/EditDescriptionDialog';
+import { EditDescriptionDialog } from '@/components/EditDescriptionDialog';
 
 interface DescriptionsListProps {
   viewMode: string; // 'english', 'gujarati', or 'ginlish'
