@@ -248,6 +248,9 @@ const InvoicePreview = ({
                     <th className="border border-gray-300 p-3 text-center font-bold text-black w-24">
                       {isGujarati ? gujaratiTerms.quantity : 'Qty'}
                     </th>
+                    <th className="border border-gray-300 p-3 text-center font-bold text-black w-20">
+                      {isGujarati ? gujaratiTerms.unit : 'Unit'}
+                    </th>
                     <th className="border border-gray-300 p-3 text-right font-bold text-black w-32">
                       {isGujarati ? `${gujaratiTerms.rate} (₹)` : 'Rate (₹)'}
                     </th>
@@ -267,6 +270,9 @@ const InvoicePreview = ({
                       </td>
                       <td className="border border-gray-300 p-3 text-center text-black font-medium">
                         {formatQuantity(item.quantity)}
+                      </td>
+                      <td className="border border-gray-300 p-3 text-center text-black font-medium">
+                        {item.unit || 'pcs'}
                       </td>
                       <td className="border border-gray-300 p-3 text-right text-black font-medium">
                         {formatCurrency(item.rate)}

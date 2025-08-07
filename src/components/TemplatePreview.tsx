@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { formatNumber } from '@/utils/formatNumber';
 import { uploadLogo } from '@/utils/fileUpload';
@@ -15,6 +16,7 @@ interface TemplatePreviewProps {
       id: string;
       description: string;
       quantity: number;
+      unit?: string;
       rate: number;
       total: number;
     }[];
@@ -209,6 +211,7 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
                   <th className="p-2 text-left border border-gray-300 font-bold text-black">Sr</th>
                   <th className="p-2 text-left border border-gray-300 font-bold text-black">Description</th>
                   <th className="p-2 text-center border border-gray-300 font-bold text-black">Qty</th>
+                  <th className="p-2 text-center border border-gray-300 font-bold text-black">Unit</th>
                   <th className="p-2 text-right border border-gray-300 font-bold text-black">Rate (₹)</th>
                   <th className="p-2 text-right border border-gray-300 font-bold text-black">Total (₹)</th>
                 </tr>
@@ -219,6 +222,7 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
                     <td className="p-2 border border-gray-300 text-black text-center font-medium">{index + 1}</td>
                     <td className="p-2 border border-gray-300 text-black">{item.description}</td>
                     <td className="p-2 text-center border border-gray-300 text-black font-medium">{item.quantity}</td>
+                    <td className="p-2 text-center border border-gray-300 text-black font-medium">{item.unit || 'pcs'}</td>
                     <td className="p-2 text-right border border-gray-300 text-black font-medium">{formatNumber(item.rate)}</td>
                     <td className="p-2 text-right border border-gray-300 text-black font-bold">{formatNumber(item.total)}</td>
                   </tr>

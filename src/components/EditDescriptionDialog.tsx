@@ -1,289 +1,124 @@
-import { useState, useEffect, useRef } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { useAIText } from '@/hooks/use-ai-text';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { saveDescription, Description } from '@/services/descriptionService';
-import { Loader2 } from 'lucide-react';
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Pencil } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EditDescriptionDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  description: Description | null;
-  onSave: () => void;
+  id: string;
+  englishText: string;
+  gujaratiText: string;
+  onUpdate: (id: string, englishText: string, gujaratiText: string) => void;
 }
 
-const EditDescriptionDialog = ({ 
-  open, 
-  onOpenChange, 
-  description, 
-  onSave 
+export const EditDescriptionDialog = ({ 
+  id, 
+  englishText, 
+  gujaratiText, 
+  onUpdate 
 }: EditDescriptionDialogProps) => {
+  const [open, setOpen] = useState(false);
+  const [english, setEnglish] = useState(englishText);
+  const [gujarati, setGujarati] = useState(gujaratiText);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { translateTextWithAI, generateMultiLanguageText, containsGujarati } = useAIText();
-  const [englishText, setEnglishText] = useState('');
-  const [gujaratiText, setGujaratiText] = useState('');
-  const [ginlishText, setGinlishText] = useState('');
-  const [isTranslating, setIsTranslating] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [showAllFields, setShowAllFields] = useState(false);
-  const englishInputRef = useRef<HTMLInputElement>(null);
-  
-  // Initialize form with description data if editing
+
   useEffect(() => {
-    if (description) {
-      setEnglishText(description.english_text);
-      setGujaratiText(description.gujarati_text);
-      setGinlishText(description.ginlish_text || '');
-
-      // Show all fields if any field has content or contains Gujarati
-      const hasGujarati = containsGujarati(description.english_text) ||
-                         containsGujarati(description.gujarati_text) ||
-                         containsGujarati(description.ginlish_text || '');
-      const hasMultipleFields = description.gujarati_text || description.ginlish_text;
-
-      setShowAllFields(hasGujarati || hasMultipleFields);
-    } else {
-      // New description
-      setEnglishText('');
-      setGujaratiText('');
-      setGinlishText('');
-      setShowAllFields(false);
-    }
-  }, [description, containsGujarati]);
-  
-  // Focus the input when dialog opens
-  useEffect(() => {
-    if (open && englishInputRef.current) {
-      setTimeout(() => {
-        englishInputRef.current?.focus();
-      }, 100);
-    }
-  }, [open]);
-
-  // Auto-detect language and show all fields when needed
-  const handleTextChange = (field: 'english' | 'gujarati' | 'ginlish', value: string) => {
-    switch (field) {
-      case 'english':
-        setEnglishText(value);
-        break;
-      case 'gujarati':
-        setGujaratiText(value);
-        break;
-      case 'ginlish':
-        setGinlishText(value);
-        break;
-    }
-
-    // Auto-detect if we should show all fields
-    if (containsGujarati(value) && !showAllFields) {
-      setShowAllFields(true);
-      // Auto-generate other translations
-      handleAutoTranslate(value);
-    }
-  };
-
-  const handleAutoTranslate = async (inputText: string) => {
-    if (!inputText.trim() || !containsGujarati(inputText)) return;
-
-    setIsTranslating(true);
-    try {
-      const translations = await generateMultiLanguageText(inputText);
-      if (translations) {
-        // Only update empty fields to avoid overwriting user input
-        if (!englishText.trim()) setEnglishText(translations.english);
-        if (!gujaratiText.trim()) setGujaratiText(translations.gujarati);
-        if (!ginlishText.trim()) setGinlishText(translations.ginlish);
-
-        toast({
-          title: 'Auto-translations generated',
-          description: 'All three language versions have been created. You can edit them as needed.',
-        });
-      }
-    } catch (error: any) {
-      console.error('Auto-translation error:', error);
-      // Don't show error for auto-translation, just fail silently
-    } finally {
-      setIsTranslating(false);
-    }
-  };
-
-  const handleManualTranslate = async () => {
-    if (!englishText.trim()) return;
-
-    setIsTranslating(true);
-    setShowAllFields(true);
-
-    try {
-      const translations = await generateMultiLanguageText(englishText);
-      if (translations) {
-        setGujaratiText(translations.gujarati);
-        setGinlishText(translations.ginlish);
-
-        toast({
-          title: 'Translations generated',
-          description: 'Gujarati and Ginlish versions have been created.',
-        });
-      } else {
-        throw new Error('Translation failed');
-      }
-    } catch (error: any) {
-      console.error('Translation error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Translation failed',
-        description: error.message || 'There was a problem generating translations',
-      });
-    } finally {
-      setIsTranslating(false);
-    }
-  };
+    setEnglish(englishText);
+    setGujarati(gujaratiText);
+  }, [englishText, gujaratiText]);
 
   const handleSave = async () => {
-    if (!englishText.trim()) {
+    if (!english.trim() || !gujarati.trim()) {
       toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'English text is required',
+        title: "Error",
+        description: "Both English and Gujarati text are required",
+        variant: "destructive",
       });
       return;
     }
-    
-    setIsSaving(true);
+
+    setIsLoading(true);
     try {
-      await saveDescription({
-        id: description?.id,
-        english_text: englishText,
-        gujarati_text: gujaratiText || englishText,
-        ginlish_text: ginlishText || englishText,
-      });
-      
+      const { error } = await supabase
+        .from('item_descriptions')
+        .update({
+          english_text: english.trim(),
+          gujarati_text: gujarati.trim(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      onUpdate(id, english.trim(), gujarati.trim());
+      setOpen(false);
       toast({
-        title: description ? 'Description updated' : 'Description created',
-        description: description 
-          ? 'The description has been successfully updated' 
-          : 'The description has been successfully created',
+        title: "Success",
+        description: "Description updated successfully",
       });
-      
-      onSave();
-      onOpenChange(false);
-    } catch (error: any) {
-      console.error('Error saving description:', error);
+    } catch (error) {
+      console.error('Error updating description:', error);
       toast({
-        variant: 'destructive',
-        title: 'Error saving description',
-        description: error.message || 'There was a problem saving the description',
+        title: "Error",
+        description: "Failed to update description",
+        variant: "destructive",
       });
     } finally {
-      setIsSaving(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm">
+          <Pencil className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{description ? 'Edit Description' : 'Add New Description'}</DialogTitle>
-          <DialogDescription>
-            Enter the description in any language. If you enter Gujarati text, all three language versions will be automatically generated.
-          </DialogDescription>
+          <DialogTitle>Edit Description</DialogTitle>
         </DialogHeader>
-        
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="english-text">English Text</Label>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="english">English</Label>
             <Input
-              id="english-text"
-              ref={englishInputRef}
-              value={englishText}
-              onChange={(e) => handleTextChange('english', e.target.value)}
-              placeholder="Enter description in English"
+              id="english"
+              value={english}
+              onChange={(e) => setEnglish(e.target.value)}
+              placeholder="Enter English description"
             />
           </div>
-          
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleManualTranslate}
-              disabled={!englishText.trim() || isTranslating}
-            >
-              {isTranslating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Generate All Languages
-            </Button>
-
-            {!showAllFields && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowAllFields(true)}
-              >
-                Show All Fields
-              </Button>
-            )}
+          <div>
+            <Label htmlFor="gujarati">Gujarati</Label>
+            <Input
+              id="gujarati"
+              value={gujarati}
+              onChange={(e) => setGujarati(e.target.value)}
+              placeholder="Enter Gujarati description"
+            />
           </div>
-          
-          {showAllFields && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="gujarati-text">Gujarati Text</Label>
-                <Input
-                  id="gujarati-text"
-                  value={gujaratiText}
-                  onChange={(e) => handleTextChange('gujarati', e.target.value)}
-                  placeholder="ગુજરાતીમાં વર્ણન લખો"
-                  className="font-gujarati"
-                  dir="auto"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="ginlish-text">Ginlish Text (Gujarati + English)</Label>
-                <Input
-                  id="ginlish-text"
-                  value={ginlishText}
-                  onChange={(e) => handleTextChange('ginlish', e.target.value)}
-                  placeholder="Mixed ગુજરાતી and English description"
-                  dir="auto"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Ginlish is a mix of Gujarati and English commonly used in Gujarat business
-                </p>
-              </div>
-            </>
-          )}
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={isLoading}>
+              {isLoading ? "Saving..." : "Save"}
+            </Button>
+          </div>
         </div>
-        
-        <DialogFooter>
-          <Button 
-            variant="outline" 
-            onClick={() => onOpenChange(false)}
-            disabled={isSaving}
-          >
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSave}
-            disabled={!englishText.trim() || isSaving}
-          >
-            {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {description ? 'Update' : 'Save'}
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 };
-
-export default EditDescriptionDialog;
